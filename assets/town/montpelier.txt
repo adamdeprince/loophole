@@ -1,0 +1,243 @@
+# Montpelier, Vermont, on Halloween night.
+#
+# From the State House to the college, between the hills on both sides of
+# Main Street, down to the Winooski River. One tile is about five metres;
+# x runs east, y runs south. The layout is drawn from memory of the town and
+# simplified: fix anything that is wrong here, the game reads it at start.
+# The format is described in README.md next to this file.
+#
+# Shops, restaurants and hotels have made-up names. Public places (the State
+# House, the library, the fire station, City Hall, the churches, the post
+# office, the college) are themselves.
+
+town "Montpelier" 260 196
+seed 1791
+start 128 132
+
+# ---------------------------------------------------------------- water --
+river "Winooski River" 10 : 0,178 30,179.5 60,177.5 90,180 110,178.5 125,177 145,178 170,180 200,178.5 230,180.5 260,179
+river "North Branch" 4 : 121,0 120,28 119,56 117,76 118.5,96 117,116 118,130 116.5,146 115,161 117,170 119,176
+
+# --------------------------------------------------------------- streets --
+street "State Street" 4 houses downtown : 0,130 135,130
+street "Main Street" 4 houses downtown : 135,0 135,196
+street "East State Street" 3 houses : 135,130 165,128 195,122 222,116
+street "College Street" 3 houses : 135,144 170,144 200,140 222,132 230,120
+street "Barre Street" 3 houses : 135,156 180,157 260,159
+street "Elm Street" 3 houses : 111,130 111,56
+street "School Street" 3 houses : 135,96 175,94 198,92
+street "North Street" 3 houses : 135,66 168,64 200,65
+street "Spring Street" 3 houses : 135,78 172,76 200,77 258,78
+street "Liberty Street" 3 houses : 175,94 173,76
+street "Court Street" 3 houses : 64,130 64,86
+street "Hubbard Street" 3 houses : 64,104 111,102
+street "Baldwin Street" 3 houses : 8,130 8,92
+street "Terrace Street" 3 houses : 111,82 90,80 64,86
+street "Taylor Street" 3 houses : 100,130 100,170
+street "Bailey Avenue" 3 houses : 40,130 40,196
+street "Memorial Drive" 3 : 0,191 260,191
+lane "Langdon Street" 2.5 downtown : 135,116 121.5,116
+lane "Stone Cutters Way" 2.6 : 135,167 165,168 200,167
+footbridge "the Langdon Street footbridge" 1.8 : 121.5,116 113,116
+path "the bike path" 1.2 : 0,170.5 40,171 98,170.5 112,170 135,170.5 200,171 260,171
+path "the State House walk" 2.2 : 42,112.5 42,127.8
+path "a Hubbard Park trail" 1 : 8,92 22,82 38,74 52,68 66,65 84,62 104,60 111,60
+path "a path across the green" 1.4 : 222,116 228,104 229,90
+path "a path across the green" 1.2 : 204,104 228,104 248,102
+
+# The trail behind the State House, up through Hubbard Park to the lookout
+# tower. Raspberry canes all the way up: a lot of berries, a lot of thorns.
+path "the Hubbard Park trail" 1.2 : 42,97.4 40,91 46,85 38,79 30,71 36,63 48,57 60,51 53,43 40,37 46,29 58,23 53,17 50.5,13.4
+
+# ----------------------------------------------------------------- areas --
+area woods "Hubbard Park" : 0,0 116,0 116,56 111,71 80,76 60,82 40,86 20,90 0,92
+area lawn "the State House lawn" : 22,112.2 60,112.2 60,126.6 22,126.6
+area lawn "the State House grounds" : 22,94 60,94 60,98 22,98
+area green "the college green" : 200,90 256,90 256,118 236,120 224,119 200,118
+area parking "the parking lot behind Christ Church" : 103,144 113,144 113,154 103,154
+area parking "the Pshaw's parking lot" : 122.6,169 131.6,169 131.6,169.6 122.6,169.6
+area plaza "City Hall plaza" : 131.6,142.6 131.6,144.6 122.6,144.6 122.6,142.6
+
+# ---------------------------------------------------- the State House end --
+building statehouse "the Vermont State House" 28 98 28 14 door=S say="Welcome to the Republic of Vermont, est. 1777. We joined the Union in 1791 and some of us are still thinking it over. Maple candy?" gives=maple
+building museum "the Pavilion Building and the Vermont History Museum" 11 114 10 12.4 door=S say="Ooh, a ghost! We have a whole exhibit about those."
+building court "the Vermont Supreme Court" 68 117 10 9.5 door=S say="Court is adjourned. Overruled, take a candy."
+building restaurant "Capitol Grinds" 81 120 8 6.5 door=S say="Decaf for the ghost. And a cookie."
+building shop "Woodenly Mountain Toys" 91 120 8 6.5 door=S say="Every ghost gets a wooden yo-yo. Kidding, here's candy."
+building hotel "the Capitol Pizazz Hotel" 44 134 15 9 door=N say="Room service! One candy, delivered."
+building office "a state office building" 62 134 12 10 door=N
+building office "another state office building" 50 148 16 9 door=N
+building office "the Department of Fiddleheads and Maple" 72 150 14 8 door=W
+area parking "a state parking lot" : 50,159 86,159 86,166 50,166
+area parking "a state parking lot" : 4,148 30,148 30,162 4,162
+building postoffice "the Post Office" 78 134 10 8 door=N say="Neither rain nor sleet nor ghost. Here, first class candy."
+building church "Christ Church" 103.5 134 7 9 door=N say="Bless you, little ghost."
+building restaurant "Sardonic's Riverside" 103 156 9 6.5 door=W say="Oh, how original. A sheet. Here's a mint."
+
+# ---------------------------------------------- Main Street, west side --
+building shop "Rubble-Rouser Chocolate" 123 77 8.6 7 door=E say="Single-origin, bean-to-bar, for a single-origin ghost." gives=chocolate
+building library "the Kellogg-Hubbard Library" 122.6 86 9 12.5 door=E say="Shh! Bookmarks and candy, both are free." gives=bookmark
+building shop "Bare Paws Books" 123 100 8.6 7 door=E say="You look like a reader. Take a bookmark AND a candy." gives=bookmark
+building restaurant "Two Bit Taproom" 123 108.5 8.6 5.5 door=E say="Root beer barrel for the little spook."
+building restaurant "Plausible Pie" 123 119 8.6 7.4 door=E say="Pie? No pie. Candy, though."
+building cityhall "City Hall" 122.6 134 9 8.6 door=E say="City Hall is closed. Here's a pamphlet about composting." gives=pamphlet
+building firehouse "the Fire Station" 122.6 145 9 8 door=E say="Stop, drop and roll! Here's a sticker and a candy." gives=sticker
+building restaurant "Down Hole Kitchen" 123 155 8.6 5 door=E say="Biscuit? No? Candy then."
+building grocery "Pshaw's Supermarket" 122.6 161.5 9 7.2 door=E say="Aisle seven: candy. Take some, we overordered."
+
+# ---------------------------------------------- Main Street, east side --
+building church "the Unitarian Church" 138.4 83 8.5 9.5 door=W say="Welcome, all spirits."
+building shop "Onion River Indoors" 138.4 99 7 3.3 door=W say="Gear for the great indoors. Candy's by the register."
+building church "Bethany Church" 138.4 102.5 9 10.5 door=W say="Happy Halloween! Mind the step."
+building restaurant "The Chubby Pancake" 138.4 114.5 8 6 door=W say="Crêpe? Candy? Crêpe-candy?"
+building restaurant "Coffee Cornered" 138.4 121.5 8 5 door=W say="You're cornered. Have a candy."
+building theater "the Savory Theater" 138.4 133.4 8 7.6 door=W say="Tonight: Night of the Living Bread. Free popcorn ball." gives=popcorn
+building restaurant "Charlie Uh-Oh's" 138.4 147 7 6 door=W say="Uh-oh, a ghost. Here, kid."
+building shop "Oh Bushwhackin' Hardware" 138.4 159 9 5.5 door=W say="Need duct tape for that costume? Take a roll." gives=tape
+building coop "the Hungry Molehill Co-op" 150 159.2 16 5.2 door=S say="Ethically sourced carob drops. They're... candy-adjacent." gives=carob
+building church "St. Augustine Church" 172 160 9 5 door=N say="Bless your little sheet."
+
+# ------------------------------------------------------------ the college --
+building college "College Hall" 220 80 18 10 door=S say="Vermont College of Fine Arts welcomes all ghosts. Is this a performance piece?"
+building college "Noble Hall" 243 96 9 8 door=W say="We're an MFA program. This candy is a metaphor."
+
+# --------------------------------------------------------- Hubbard Park --
+building tower "the Hubbard Park lookout tower" 48 7 5 5 door=S say="Who goes there? I am ETHAN ALLEN, of the Green Mountain Boys! In the name of the Great Jehovah and the Continental Congress... trick or treat? HA! Catch!" gives=ethan
+
+# ------------------------------------------------------ the kids' house --
+# On the corner of Main Street and North Street. Their mother answers the
+# door dressed as a jug of maple syrup, handing out hákarl.
+home "Loki and Skaði's house" 138.8 68.6 6 5 door=W say="Oh, you must be one of Loki's friends! Have some hákarl, it's my grandmother's recipe." gives=hakarl
+
+# ------------------------------------------------- the berries on the trail --
+raspberry 42.9 95.0 1.1
+raspberry 38.9 92.7 1.1
+raspberry 42.6 90.6 1.1
+raspberry 42.8 86.0 1.1
+raspberry 46.6 83.5 1.1
+raspberry 42.0 84.0 1.1
+raspberry 41.2 79.4 1.1
+raspberry 36.5 79.7 1.1
+raspberry 36.3 75.1 1.1
+raspberry 31.7 74.9 1.1
+raspberry 31.5 70.3 1.1
+raspberry 30.5 67.8 1.1
+raspberry 35.0 66.9 1.1
+raspberry 34.6 62.3 1.1
+raspberry 39.5 63.0 1.1
+raspberry 41.1 58.7 1.1
+raspberry 45.5 60.0 1.1
+raspberry 47.2 55.7 1.1
+raspberry 51.6 56.9 1.1
+raspberry 53.3 52.6 1.1
+raspberry 57.7 53.9 1.1
+raspberry 58.8 52.0 1.1
+raspberry 58.9 47.4 1.1
+raspberry 54.3 46.9 1.1
+raspberry 54.4 42.3 1.1
+raspberry 49.6 43.1 1.1
+raspberry 47.8 38.9 1.1
+raspberry 43.4 40.3 1.1
+raspberry 41.6 36.0 1.1
+raspberry 40.1 34.2 1.1
+raspberry 44.7 33.4 1.1
+raspberry 44.2 28.8 1.1
+raspberry 48.9 29.3 1.1
+raspberry 50.6 25.0 1.1
+raspberry 55.0 26.2 1.1
+raspberry 56.7 21.9 1.1
+raspberry 57.9 19.9 1.1
+raspberry 53.5 18.6 1.1
+raspberry 54.4 14.4 1.1
+raspberry 50.3 12.3 1.1
+
+# -------------------------------------------- the hillside north of town --
+area woods "the sugarbush" : 176,0 260,0 260,44 216,50 182,40
+building shop "the Sap Happens Sugarhouse" 200 20 9 6 door=S say="Sugaring's in March, but we keep a jug for raccoons. I mean, kids." gives=maple
+path "the sugarhouse lane" 1.4 : 168,64 186,48 204,26.8
+
+# Flags along State Street: the Stars and Stripes, and here and there the
+# Green Mountain Boys.
+flag 6.0 127.15
+flag 18.8 132.8
+gmbflag 32.1 127.15
+flag 42.3 132.8
+flag 53.9 127.15
+gmbflag 65.6 132.8
+flag 75.7 127.15
+gmbflag 88.8 132.8
+gmbflag 98.3 127.15
+gmbflag 110.8 132.8
+flag 122.1 127.15
+
+# -------------------------------------------- things that are always here --
+raspberry 20 93.5 1.4
+raspberry 46 87 1.6
+raspberry 86 77.5 1.3
+raspberry 106 68.5 1.4
+raspberry 60 168.6 1.4
+raspberry 250 168.6 1.3
+raspberry 222 173.5 1.6
+raspberry 253 93 1.2
+raspberry 202.5 92.5 1.2
+candybowl 45 113.4
+bench 36 124
+bench 48 124
+bench 128 171.5
+bench 70 171.5
+bench 214 108
+flyerpole 131.6 127.4
+flyerpole 138.4 127.4
+flyerpole 131.6 133.6
+flyerpole 138.0 132.6
+flyerpole 131.6 114.5
+flyerpole 138.4 155
+flyerpole 109 127.4
+flyerpole 132.2 98.8
+hydrant 132.2 119.5
+hydrant 109.2 133.6
+hydrant 138.6 145.8
+hydrant 42.6 133.6
+puddle 127 160.75 0.7
+puddle 98 164 1.3
+puddle 150 172.2 1.2
+puddle 24 96 1.0
+puddle 225 106 1.4
+puddle 70 144 1.0
+# Painted cows. Every town has a few; this one got carried away.
+cow 30 127.6
+cow 66.6 127.6
+cow 95 133.8
+cow 132.3 122
+cow 141.6 128.6
+cow 132.3 151.2
+cow 141.6 143.4
+cow 132.3 94
+cow 141.6 97
+cow 160 132.6
+cow 187 122.6
+cow 218 120.4
+cow 210 106
+cow 160 155
+cow 112.8 106
+cow 64 164
+cow 40 168.8
+cow 140 172.6
+tptree 214 100
+tptree 236 109
+maple 26 118
+maple 58 118
+maple 26 123
+maple 58 123
+oak 40 95.6
+oak 46 95.6
+maple 209 96
+maple 248 112
+oak 212 112
+maple 240 106
+oak 204 114
+birch 230 96
+pine 64 168.5
+pine 80 168.5
+maple 152 169
+maple 176 169.2

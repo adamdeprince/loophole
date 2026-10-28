@@ -1,0 +1,305 @@
+//! Discoveries: the odd things that can happen, collected in a journal
+//! that is kept between games. Finding them all is the closest the night
+//! has to an end.
+
+use serde::{Deserialize, Serialize};
+use std::collections::BTreeSet;
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
+pub enum Id {
+    FirstCandy,
+    FullSizeBar,
+    Refused,
+    Screamed,
+    PityCandy,
+    SecondVisit,
+    NewGhost,
+    Nearsighted,
+    Toothbrush,
+    LightsOut,
+    Hakarl,
+    KidsLoveHakarl,
+    RivalsFlee,
+    TookWholeBowl,
+    SkadiPutsBack,
+    LokiBump,
+    SkadiBump,
+    EggBroken,
+    SkadiComforts,
+    EggDelivered,
+    TugOfWar,
+    HenStealsCandy,
+    HenEatsDropped,
+    SlippedInPoop,
+    Raspberries,
+    LeafPile,
+    LokiLeafPile,
+    Swam,
+    GumPatch,
+    FlyerPatch,
+    TpPatch,
+    TapeFromHardware,
+    SkadiFixes,
+    LokiGift,
+    TailPulled,
+    WordSpreads,
+    Photographed,
+    DogBark,
+    Twins,
+    TeenSnatch,
+    StateHouse,
+    Republic,
+    Tower,
+    College,
+    Library,
+    FireStation,
+    MapleOverload,
+    Stuffed,
+    Miserable,
+    Cows,
+    NewNight,
+    GravyBlocks,
+    BellyRub,
+    GravyBarf,
+    SlippedInBarf,
+    BlackCat,
+    CatHiss,
+    CatTreed,
+    SkadiMeetsCat,
+    EthanAllen,
+    EthanGifts,
+}
+
+impl Id {
+    pub const ALL: [Id; 61] = [
+        Id::FirstCandy,
+        Id::FullSizeBar,
+        Id::Refused,
+        Id::Screamed,
+        Id::PityCandy,
+        Id::SecondVisit,
+        Id::NewGhost,
+        Id::Nearsighted,
+        Id::Toothbrush,
+        Id::LightsOut,
+        Id::Hakarl,
+        Id::KidsLoveHakarl,
+        Id::RivalsFlee,
+        Id::TookWholeBowl,
+        Id::SkadiPutsBack,
+        Id::LokiBump,
+        Id::SkadiBump,
+        Id::EggBroken,
+        Id::SkadiComforts,
+        Id::EggDelivered,
+        Id::TugOfWar,
+        Id::HenStealsCandy,
+        Id::HenEatsDropped,
+        Id::SlippedInPoop,
+        Id::Raspberries,
+        Id::LeafPile,
+        Id::LokiLeafPile,
+        Id::Swam,
+        Id::GumPatch,
+        Id::FlyerPatch,
+        Id::TpPatch,
+        Id::TapeFromHardware,
+        Id::SkadiFixes,
+        Id::LokiGift,
+        Id::TailPulled,
+        Id::WordSpreads,
+        Id::Photographed,
+        Id::DogBark,
+        Id::Twins,
+        Id::TeenSnatch,
+        Id::StateHouse,
+        Id::Republic,
+        Id::Tower,
+        Id::College,
+        Id::Library,
+        Id::FireStation,
+        Id::MapleOverload,
+        Id::Stuffed,
+        Id::Miserable,
+        Id::Cows,
+        Id::NewNight,
+        Id::GravyBlocks,
+        Id::BellyRub,
+        Id::GravyBarf,
+        Id::SlippedInBarf,
+        Id::BlackCat,
+        Id::CatHiss,
+        Id::CatTreed,
+        Id::SkadiMeetsCat,
+        Id::EthanAllen,
+        Id::EthanGifts,
+    ];
+
+    /// The journal entry once found.
+    pub fn title(self) -> &'static str {
+        match self {
+            Id::FirstCandy => "Free candy! It's true!",
+            Id::FullSizeBar => "The full-size bar house",
+            Id::Refused => "Nice try, raccoon",
+            Id::Screamed => "Somebody screamed",
+            Id::PityCandy => "Candy out of pity",
+            Id::SecondVisit => "\"Didn't you already come by?\"",
+            Id::NewGhost => "A brand new ghost (same raccoon)",
+            Id::Nearsighted => "\"What a lovely costume, dear\"",
+            Id::Toothbrush => "The dentist's house",
+            Id::LightsOut => "Porch light out",
+            Id::Hakarl => "Hákarl!",
+            Id::KidsLoveHakarl => "Loki and Skaði get hákarl",
+            Id::RivalsFlee => "Other kids flee the hákarl",
+            Id::TookWholeBowl => "Took the whole bowl",
+            Id::SkadiPutsBack => "Skaði puts some back",
+            Id::LokiBump => "Loki crashes into you",
+            Id::SkadiBump => "Bowled over by Skaði",
+            Id::EggBroken => "Loki's egg",
+            Id::SkadiComforts => "Big sister to the rescue",
+            Id::EggDelivered => "Special delivery: one egg",
+            Id::TugOfWar => "Tug of hen",
+            Id::HenStealsCandy => "Gullinkombi raids the bag",
+            Id::HenEatsDropped => "Gullinkombi cleans up",
+            Id::SlippedInPoop => "Slipped in it",
+            Id::Raspberries => "Raspberries, ouch",
+            Id::LeafPile => "Through the leaf pile",
+            Id::LokiLeafPile => "Loki dives into the leaves",
+            Id::Swam => "Raccoons can swim",
+            Id::GumPatch => "Mended with somebody's gum",
+            Id::FlyerPatch => "Have you seen this cat?",
+            Id::TpPatch => "Toilet-paper tailoring",
+            Id::TapeFromHardware => "Duct tape fixes everything",
+            Id::SkadiFixes => "Skaði fixes your costume",
+            Id::LokiGift => "Loki brings you a present",
+            Id::TailPulled => "Loki pulls your tail",
+            Id::WordSpreads => "Word gets around",
+            Id::Photographed => "A leaf peeper's photo",
+            Id::DogBark => "A dog knows",
+            Id::Twins => "Another ghost in a sheet",
+            Id::TeenSnatch => "Teenagers",
+            Id::StateHouse => "The gold dome",
+            Id::Republic => "The Republic of Vermont",
+            Id::Tower => "Up in Hubbard Park",
+            Id::College => "Art school",
+            Id::Library => "Shh!",
+            Id::FireStation => "Stop, drop and roll",
+            Id::MapleOverload => "Too much maple",
+            Id::Stuffed => "Stuffed",
+            Id::Miserable => "So very sad",
+            Id::Cows => "So many cows",
+            Id::NewNight => "Halloween again",
+            Id::GravyBlocks => "Gravy will not budge",
+            Id::BellyRub => "Belly rub",
+            Id::GravyBarf => "Gravy ate the candy",
+            Id::SlippedInBarf => "Slipped in something worse",
+            Id::BlackCat => "A black cat crossed your path",
+            Id::CatHiss => "The cat knows",
+            Id::CatTreed => "Loki chases the cat up a tree",
+            Id::SkadiMeetsCat => "Cat meets cat",
+            Id::EthanAllen => "Ethan Allen, in person",
+            Id::EthanGifts => "A commission and a key",
+        }
+    }
+
+    /// The journal's hint before it is found.
+    pub fn hint(self) -> &'static str {
+        match self {
+            Id::FirstCandy => "Knock on a door.",
+            Id::FullSizeBar => "Somewhere, somebody gives out the big ones.",
+            Id::Refused => "Not everybody is fooled.",
+            Id::Screamed => "A very torn sheet at a nervous door.",
+            Id::PityCandy => "Even a raccoon can look pitiful.",
+            Id::SecondVisit => "Go back to the same door, looking the same.",
+            Id::NewGhost => "Go back looking different.",
+            Id::Nearsighted => "Some people can't see very well.",
+            Id::Toothbrush => "Not everybody approves of candy.",
+            Id::LightsOut => "Bowls run out.",
+            Id::Hakarl => "Somebody's mother has a family recipe.",
+            Id::KidsLoveHakarl => "Take the children home.",
+            Id::RivalsFlee => "Not every child likes fermented shark.",
+            Id::TookWholeBowl => "\"Please take one.\" Take more.",
+            Id::SkadiPutsBack => "Skaði has opinions about fairness.",
+            Id::LokiBump => "Loki runs everywhere.",
+            Id::SkadiBump => "Skaði in a hurry.",
+            Id::EggBroken => "Loki carries eggs. Carefully.",
+            Id::SkadiComforts => "What a big sister does.",
+            Id::EggDelivered => "Where do the eggs go?",
+            Id::TugOfWar => "Two children, one hen.",
+            Id::HenStealsCandy => "A hungry hen and a full bag.",
+            Id::HenEatsDropped => "Drop something near a hungry hen.",
+            Id::SlippedInPoop => "Watch where you step.",
+            Id::Raspberries => "Sweet, and thorny.",
+            Id::LeafPile => "Somebody spent all afternoon raking.",
+            Id::LokiLeafPile => "Leaves and a six-year-old.",
+            Id::Swam => "The Winooski is right there.",
+            Id::GumPatch => "Sidewalk gum is very sticky.",
+            Id::FlyerPatch => "Telephone poles have paper on them.",
+            Id::TpPatch => "Somebody decorated a tree.",
+            Id::TapeFromHardware => "The hardware store has what you need.",
+            Id::SkadiFixes => "Skaði notices a torn sheet.",
+            Id::LokiGift => "Loki finds things.",
+            Id::TailPulled => "That tail is very interesting.",
+            Id::WordSpreads => "Get recognised, then knock nearby.",
+            Id::Photographed => "Tourists come for the foliage.",
+            Id::DogBark => "Dogs aren't fooled by sheets.",
+            Id::Twins => "You're not the only ghost.",
+            Id::TeenSnatch => "Big kids, big bag.",
+            Id::StateHouse => "Knock at the gold dome.",
+            Id::Republic => "Ask the State House about history.",
+            Id::Tower => "Climb the hill behind the State House.",
+            Id::College => "Visit the college.",
+            Id::Library => "Visit the library.",
+            Id::FireStation => "Visit the fire station.",
+            Id::MapleOverload => "Eat a lot of maple.",
+            Id::Stuffed => "Eat too much.",
+            Id::Miserable => "Walk a long way without eating.",
+            Id::Cows => "Count the cows downtown.",
+            Id::NewNight => "Stay out past half past nine.",
+            Id::GravyBlocks => "A big dog at State and Main likes to lie down.",
+            Id::BellyRub => "What does a lying-down dog want?",
+            Id::GravyBarf => "Drop candy near Gravy.",
+            Id::SlippedInBarf => "Watch where you step after Gravy eats.",
+            Id::BlackCat => "Somebody black and furry on State Street.",
+            Id::CatHiss => "Cats are hard to fool.",
+            Id::CatTreed => "Loki loves cats. Cats do not love Loki.",
+            Id::SkadiMeetsCat => "Skaði is dressed as a cat.",
+            Id::EthanAllen => "Follow the berries up the trail behind the State House.",
+            Id::EthanGifts => "Bring the children to the tower.",
+        }
+    }
+}
+
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Discoveries {
+    pub found: BTreeSet<Id>,
+}
+
+impl Discoveries {
+    /// Marks `id` found. True the first time.
+    pub fn mark(&mut self, id: Id) -> bool {
+        self.found.insert(id)
+    }
+
+    pub fn has(&self, id: Id) -> bool {
+        self.found.contains(&id)
+    }
+
+    pub fn count(&self) -> usize {
+        self.found.len()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn every_discovery_is_listed_once() {
+        let set: BTreeSet<Id> = Id::ALL.iter().copied().collect();
+        assert_eq!(set.len(), Id::ALL.len());
+        for id in Id::ALL {
+            assert!(!id.title().is_empty() && !id.hint().is_empty());
+        }
+    }
+}
