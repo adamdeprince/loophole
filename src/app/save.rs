@@ -18,7 +18,9 @@ pub struct Save {
 
 impl Save {
     fn path() -> Option<PathBuf> {
-        directories::ProjectDirs::from("com", "goblinreactor", "silkie-loophole").map(|d| d.data_dir().join("journal.json"))
+        let home = std::env::var_os("HOME").map(PathBuf::from);
+        let xdg = std::env::var_os("XDG_DATA_HOME").map(PathBuf::from);
+        data_dir(cfg!(target_os = "macos"), home, xdg).map(|d| d.join("journal.json"))
     }
 
     pub fn load() -> Save {
@@ -52,9 +54,41 @@ impl Save {
     }
 }
 
+/// The platform's data directory for the game: on macOS
+/// `~/Library/Application Support/com.goblinreactor.silkie-loophole`, and
+/// elsewhere `$XDG_DATA_HOME/silkie-loophole` (an absolute `XDG_DATA_HOME`
+/// only, as the XDG base directory specification says), falling back to
+/// `~/.local/share/silkie-loophole`. None without a home directory: the
+/// journal is then kept in memory for the session.
+fn data_dir(macos: bool, home: Option<PathBuf>, xdg_data_home: Option<PathBuf>) -> Option<PathBuf> {
+    let home = home.filter(|h| h.is_absolute());
+    if macos {
+        return home.map(|h| h.join("Library/Application Support/com.goblinreactor.silkie-loophole"));
+    }
+    match xdg_data_home.filter(|x| x.is_absolute()) {
+        Some(x) => Some(x.join("silkie-loophole")),
+        None => home.map(|h| h.join(".local/share/silkie-loophole")),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn the_journal_lives_where_each_platform_keeps_data() {
+        let home = Some(PathBuf::from("/home/r"));
+        assert_eq!(
+            data_dir(true, home.clone(), None),
+            Some(PathBuf::from("/home/r/Library/Application Support/com.goblinreactor.silkie-loophole"))
+        );
+        assert_eq!(data_dir(false, home.clone(), None), Some(PathBuf::from("/home/r/.local/share/silkie-loophole")));
+        assert_eq!(data_dir(false, home.clone(), Some(PathBuf::from("/data"))), Some(PathBuf::from("/data/silkie-loophole")));
+        // A relative XDG_DATA_HOME is ignored, as the specification says.
+        assert_eq!(data_dir(false, home, Some(PathBuf::from("data"))), Some(PathBuf::from("/home/r/.local/share/silkie-loophole")));
+        assert_eq!(data_dir(false, None, None), None);
+        assert_eq!(data_dir(true, Some(PathBuf::from("relative")), None), None);
+    }
 
     #[test]
     fn a_journal_round_trips() {

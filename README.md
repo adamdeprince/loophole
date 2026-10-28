@@ -204,9 +204,9 @@ silkie-loophole snapshot --at 30 out.png     # a picture of a moment of play
 silkie-loophole town [FILE]                  # check a town file
 ```
 
-The journal is kept in your platform's data directory (for example
-`~/Library/Application Support/com.goblinreactor.silkie-loophole/` on
-macOS).
+The journal is kept in `~/Library/Application Support/com.goblinreactor.silkie-loophole/`
+on macOS, and in `$XDG_DATA_HOME/silkie-loophole/` (by default
+`~/.local/share/silkie-loophole/`) elsewhere.
 
 ## Development
 

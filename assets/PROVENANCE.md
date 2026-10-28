@@ -45,9 +45,8 @@ Used for the title, signs, street names and the map. Unmodified.
 
 The game's code, art and town are under the Apache License 2.0 (`LICENSE`).
 The typeface is under the SIL Open Font License 1.1 and is included
-unmodified. The dependencies (see `Cargo.lock`) are under permissive
-licences (MIT, Apache-2.0, BSD, Zlib, ISC, Unlicense), except `option-ext`
-(MPL-2.0, through `directories`), which is used unmodified as a library.
+unmodified. The dependencies (see `Cargo.lock`) are all under permissive
+licences (MIT, Apache-2.0, BSD, Zlib, ISC, Unlicense).
 
 ## The town
 
