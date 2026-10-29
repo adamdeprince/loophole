@@ -13,13 +13,17 @@ const DIAG: u32 = 14;
 
 /// The cost of entering a tile, or None where the walker cannot go.
 fn cost(t: Terrain, swim: bool) -> Option<u32> {
+    cost_on(t, swim, 2)
+}
+
+fn cost_on(t: Terrain, swim: bool, road: u32) -> Option<u32> {
     match t {
         Terrain::Building => None,
         Terrain::Water if !swim => None,
         Terrain::Water => Some(4),
         Terrain::Woods => Some(2),
         // Walkers keep to sidewalks and paths when they can.
-        Terrain::Road => Some(2),
+        Terrain::Road => Some(road),
         _ => Some(1),
     }
 }
@@ -125,6 +129,14 @@ impl Field {
 /// An A* path of tile centres from `from` to `to`, smoothed so that it
 /// only turns where it has to. None if there is no way.
 pub fn path(town: &Town, from: Vec2, to: Vec2, swim: bool) -> Option<Vec<Vec2>> {
+    path_on(town, from, to, swim, 2)
+}
+
+/// A path for somebody who keeps off roads: a road tile costs `road`
+/// against a sidewalk's one. Corners are only cut where the straight line
+/// stays off the road too.
+pub fn path_on(town: &Town, from: Vec2, to: Vec2, swim: bool, road: u32) -> Option<Vec<Vec2>> {
+    let cost = |t: Terrain, swim: bool| cost_on(t, swim, road);
     let g = &town.grid;
     let (sx, sy) = (from.x.floor() as i32, from.y.floor() as i32);
     let (tx, ty) = (to.x.floor() as i32, to.y.floor() as i32);
@@ -158,6 +170,8 @@ pub fn path(town: &Town, from: Vec2, to: Vec2, swim: bool) -> Option<Vec<Vec2>> 
             if dx != 0 && dy != 0 && (cost(g.get(x + dx, y), swim).is_none() || cost(g.get(x, y + dy), swim).is_none()) {
                 continue;
             }
+            // A trunk or a pole in the tile: possible, but better round.
+            let c = if town.is_cluttered(nx, ny) { c + 3 } else { c };
             let nd = d.saturating_add(step * c);
             let i = idx(nx, ny);
             if nd < best[i] {
@@ -187,7 +201,7 @@ pub fn path(town: &Town, from: Vec2, to: Vec2, swim: bool) -> Option<Vec<Vec2>> 
     let mut anchor = from;
     for i in 1..tiles.len() {
         let next = if i + 1 < tiles.len() { centre(tiles[i + 1].0, tiles[i + 1].1) } else { to };
-        if !line_clear(town, anchor, next, swim) {
+        if !line_clear(town, anchor, next, swim) || (road > 2 && crosses_road(town, anchor, next)) {
             let c = centre(tiles[i].0, tiles[i].1);
             out.push(c);
             anchor = c;
@@ -197,8 +211,32 @@ pub fn path(town: &Town, from: Vec2, to: Vec2, swim: bool) -> Option<Vec<Vec2>> 
     Some(out)
 }
 
-/// Whether a walker can go straight from `a` to `b`.
+/// Whether the straight line from `a` to `b` touches a road anywhere it did
+/// not start or end.
+fn crosses_road(town: &Town, a: Vec2, b: Vec2) -> bool {
+    let start = town.grid.at(a) == Terrain::Road;
+    let end = town.grid.at(b) == Terrain::Road;
+    if start && end {
+        return false;
+    }
+    let len = a.distance(b);
+    let steps = (len / 0.25).ceil().max(1.0) as i32;
+    (1..steps).any(|i| town.grid.at(a.lerp(b, i as f32 / steps as f32)) == Terrain::Road)
+}
+
+/// Whether a walker can go straight from `a` to `b`: no walls, no water
+/// (unless swimming), and no trunk or pole in the way.
 pub fn line_clear(town: &Town, a: Vec2, b: Vec2, swim: bool) -> bool {
+    let len = a.distance(b);
+    walls_clear(town, a, b, swim) && !town.features_near((a + b) / 2.0, len / 2.0 + 1.0).any(|f| {
+        let s = f.kind.solid_radius();
+        s > 0.0 && crate::world::seg_distance(f.pos, a, b).0 < s + 0.25
+    })
+}
+
+/// Whether the straight line from `a` to `b` stays clear of walls (and of
+/// water, unless swimming).
+pub fn walls_clear(town: &Town, a: Vec2, b: Vec2, swim: bool) -> bool {
     let len = a.distance(b);
     let steps = (len / 0.25).ceil().max(1.0) as i32;
     (0..=steps).all(|i| {
@@ -222,8 +260,9 @@ mod tests {
         let col = t.buildings.iter().find(|b| b.kind == town::BuildingKind::College).unwrap();
         let p = path(&t, sh.door.step(), col.door.step(), false).expect("a way across town");
         assert!(p.len() >= 2);
+        // Walls and water only: trunks and poles are left to steering.
         for w in p.windows(2) {
-            assert!(line_clear(&t, w[0], w[1], false), "{:?} to {:?}", w[0], w[1]);
+            assert!(walls_clear(&t, w[0], w[1], false), "{:?} to {:?}", w[0], w[1]);
         }
     }
 }

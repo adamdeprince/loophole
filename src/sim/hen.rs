@@ -1,5 +1,6 @@
-//! Gullinkombi, the hen: no plan at all, ruled by her stomach. Satisfied,
-//! she potters about and gets in the way. Peckish, candy within a few
+//! Gullinkombi, the hen: no plan at all, ruled by her stomach. She goes
+//! where her flock goes (Loki and Skaði), pottering about near them.
+//! Satisfied, she gets in the way. Peckish, candy within a few
 //! steps catches her eye (and the bag). Hungry, she goes for food from
 //! across the street. Full, she lays eggs and leaves droppings.
 
@@ -37,6 +38,9 @@ pub enum State {
     Flee { from: Vec2, t: f32 },
     /// Off to sit down somewhere particular (in somebody's way).
     Plonk { to: Vec2, t: f32 },
+    /// Fed by the raccoon, and now right on its heels, under its feet,
+    /// wanting more.
+    Tail,
 }
 
 #[derive(Clone, Debug)]
@@ -53,6 +57,8 @@ pub struct Hen {
     pub egg_t: f32,
     pub poop_t: f32,
     pub held_by: Option<Who>,
+    /// Seconds more she follows the raccoon about, having been fed by it.
+    pub devoted: f32,
     pub cluck_cd: f32,
     pub stride: f32,
     pub path: Vec<Vec2>,
@@ -60,7 +66,7 @@ pub struct Hen {
 
 impl Hen {
     pub fn new(town: &Town, rng: &mut ChaCha8Rng) -> Hen {
-        let at = town.start + Vec2::new(2.5, 2.0);
+        let at = town.open_near(town.start + Vec2::new(2.5, 2.0), RADIUS, false, 12.0).unwrap_or(town.start);
         Hen {
             pos: at,
             prev: at,
@@ -68,6 +74,7 @@ impl Hen {
             facing: Dir::E,
             state: State::Peck { t: 2.0 },
             hunger: 0.35,
+            devoted: 0.0,
             fullness: 0.3,
             egg_t: rng.random_range(30.0..60.0),
             poop_t: rng.random_range(12.0..25.0),
@@ -106,6 +113,7 @@ pub fn step(g: &mut Game) {
     h.hunger = (h.hunger + DT / 150.0).min(1.0);
     h.fullness = (h.fullness - DT / 140.0).max(0.0);
     h.cluck_cd = (h.cluck_cd - DT).max(0.0);
+    h.devoted = (h.devoted - DT).max(0.0);
     if let Some(holder) = h.held_by {
         // In somebody's arms (or two somebodies').
         let pos = match holder {
@@ -123,9 +131,9 @@ pub fn step(g: &mut Game) {
     h.poop_t -= DT;
     if h.egg_t <= 0.0 && !matches!(h.state, State::Lay { .. }) {
         h.state = State::Lay { t: 1.6 };
-        h.egg_t = if h.full() { g.rng.random_range(22.0..34.0) } else { g.rng.random_range(70.0..110.0) };
+        h.egg_t = if h.full() { g.rng.random_range(40.0..60.0) } else { g.rng.random_range(70.0..110.0) };
     }
-    if g.hen.poop_t <= 0.0 && matches!(g.hen.state, State::Wander { .. } | State::Peck { .. } | State::Sit { .. }) {
+    if g.hen.poop_t <= 0.0 && matches!(g.hen.state, State::Wander { .. } | State::Peck { .. } | State::Sit { .. } | State::Tail) {
         g.hen.state = State::Poop { t: 0.6 };
         g.hen.poop_t = if g.hen.full() { g.rng.random_range(8.0..13.0) } else { g.rng.random_range(30.0..45.0) };
     }
@@ -159,10 +167,20 @@ fn find_food(g: &Game) -> Option<Food> {
 }
 
 fn think(g: &mut Game) {
-    let free = matches!(g.hen.state, State::Wander { .. } | State::Peck { .. } | State::Sit { .. } | State::Plonk { .. });
+    let free = matches!(g.hen.state, State::Wander { .. } | State::Peck { .. } | State::Sit { .. } | State::Plonk { .. } | State::Tail);
     if !free {
         return;
     }
+    // Fed by the raccoon: after it, and nothing else matters.
+    if g.hen.devoted > 0.0 {
+        g.hen.state = State::Tail;
+        return;
+    }
+    if g.hen.state == State::Tail {
+        g.hen.state = next_idle(g);
+    }
+    // Food first: dropped candy distracts her even on the way after the
+    // children.
     if g.tick % 20 == 0 {
         if let Some(food) = find_food(g) {
             g.hen.state = State::GoFood { food, t: 14.0 };
@@ -170,18 +188,28 @@ fn think(g: &mut Game) {
                 g.say(Who::Hen, "Bok? BOK!");
                 g.hen.cluck_cd = 8.0;
             }
+            return;
         }
+    }
+    // The flock moved on: after it.
+    if g.hen.pos.distance(flock(g)) > 6.0 && !matches!(g.hen.state, State::Wander { .. }) {
+        g.hen.state = State::Wander { to: flock(g), t: 12.0 };
     }
 }
 
 fn walk(g: &mut Game, to: Vec2, speed: f32) -> f32 {
     let town = g.town.clone();
+    // Something solid right at the spot (a trunk, a pole): as near as she
+    // can get counts as there.
+    let to = town.open_near(to, RADIUS, true, 4.0).unwrap_or(to);
     let h = &mut g.hen;
     let left = h.pos.distance(to);
     let mut aim = to;
     if !crate::world::nav::line_clear(&town, h.pos, to, false) {
         if h.path.last().is_none_or(|p| p.distance(to) > 1.5) {
-            h.path = crate::world::nav::path(&town, h.pos, to, false).unwrap_or_default();
+            h.path = crate::world::nav::path(&town, h.pos, to, false)
+                .or_else(|| crate::world::nav::path(&town, h.pos, to, true))
+                .unwrap_or_default();
         }
         while h.path.len() > 1 && h.path[0].distance(h.pos) < 0.4 {
             h.path.remove(0);
@@ -198,7 +226,7 @@ fn walk(g: &mut Game, to: Vec2, speed: f32) -> f32 {
     h.facing = facing_of(h.vel, h.facing);
     let before = h.pos;
     let dv = h.vel * DT;
-    move_body(&town, &mut h.pos, dv, RADIUS, false);
+    move_body(&town, &mut h.pos, dv, RADIUS, true);
     h.stride += h.pos.distance(before);
     left
 }
@@ -212,7 +240,10 @@ fn act(g: &mut Game) {
     match state {
         State::Wander { to, t } => {
             let t = t - DT;
-            if walk(g, to, 1.3) < 0.3 || t <= 0.0 {
+            // Left behind, she hurries (a hen can run).
+            let behind = g.hen.pos.distance(flock(g)) > 6.0;
+            let to = if behind { flock(g) } else { to };
+            if walk(g, to, if behind { 3.4 } else { 1.3 }) < 0.3 || t <= 0.0 {
                 g.hen.state = next_idle(g);
             } else {
                 g.hen.state = State::Wander { to, t };
@@ -243,8 +274,12 @@ fn act(g: &mut Game) {
                 return;
             }
             let reach = if food == Food::Bag { 0.7 } else { 0.4 };
+            let before = g.hen.pos;
             if walk(g, to, 2.6) < reach {
                 eat(g, food);
+            } else if g.hen.pos.distance(before) < 0.002 && t < 12.0 {
+                // Wedged (a pole, a wall): not worth it.
+                g.hen.state = next_idle(g);
             } else {
                 g.hen.state = State::GoFood { food, t };
             }
@@ -285,6 +320,25 @@ fn act(g: &mut Game) {
                 g.hen.state = State::Sit { t: g.rng.random_range(3.0..6.0) };
             } else {
                 g.hen.state = State::Plonk { to, t };
+            }
+        }
+        State::Tail => {
+            // Right behind its heels, at a hen's sprint, clucking for more;
+            // close enough, now and then a peck at the bag.
+            let r = g.raccoon.pos;
+            let back = if g.raccoon.vel.length() > 0.2 { -g.raccoon.vel.normalize() } else { -g.raccoon.facing.vec() };
+            let spot = r + back * 0.7;
+            if walk(g, spot, 4.6) < 0.3 {
+                stop(g);
+            }
+            if g.hen.cluck_cd <= 0.0 {
+                let l = lines::pick(&mut g.rng, &["BOK BOK BOK!", "Bok? Bok?", "BAWK!", "*peck peck*"]);
+                g.say(Who::Hen, l);
+                g.hen.cluck_cd = g.rng.random_range(3.0..6.0);
+            }
+            if g.hen.pos.distance(r) < 0.9 && g.rng.random_bool(DT as f64 / 8.0) {
+                eat(g, Food::Bag);
+                g.hen.state = State::Tail;
             }
         }
         State::Flee { from, t } => {
@@ -336,15 +390,34 @@ fn eat(g: &mut Game, food: Food) {
     }
 }
 
+/// The raccoon feeds her. `fill` is how much it fills her; `devotion`, how
+/// many seconds she follows the raccoon about afterwards. A fed hen lays
+/// sooner.
+pub fn fed(g: &mut Game, fill: f32, devotion: f32) {
+    let h = &mut g.hen;
+    h.hunger = (h.hunger - fill).max(0.0);
+    h.fullness = (h.fullness + fill).min(1.0);
+    h.devoted = h.devoted.max(devotion);
+    let soon = g.rng.random_range(6.0..16.0);
+    h.egg_t = h.egg_t.min(soon);
+    h.state = State::Eat { t: 0.9 };
+    g.discover(Id::HenTails);
+}
+
+/// Where her flock is: between the two children.
+pub fn flock(g: &Game) -> Vec2 {
+    (g.kids[0].pos + g.kids[1].pos) / 2.0
+}
+
 /// What a hen does when she is not doing anything: peck, wander after the
 /// children, or plonk herself down in the raccoon's way.
 fn next_idle(g: &mut Game) -> State {
-    let near = (g.raccoon.pos + g.kids[0].pos + g.kids[1].pos) / 3.0;
+    let near = flock(g);
     let roll: f32 = g.rng.random();
-    if g.hen.pos.distance(near) > 10.0 {
+    if g.hen.pos.distance(near) > 5.0 {
         return State::Wander { to: near, t: 12.0 };
     }
-    if roll < 0.12 && g.raccoon.vel.length() > 1.0 {
+    if roll < 0.12 && g.raccoon.vel.length() > 1.0 && g.raccoon.pos.distance(near) < 6.0 {
         // Right where the raccoon is going.
         let ahead = g.raccoon.pos + g.raccoon.vel.normalize() * 2.5;
         if g.town.clear(ahead, RADIUS, false) {
@@ -358,7 +431,7 @@ fn next_idle(g: &mut Game) -> State {
         return State::Sit { t: g.rng.random_range(3.0..7.0) };
     }
     let a: f32 = g.rng.random_range(0.0..std::f32::consts::TAU);
-    let to = near + Vec2::new(a.cos(), a.sin()) * g.rng.random_range(1.5..6.0);
+    let to = near + Vec2::new(a.cos(), a.sin()) * g.rng.random_range(1.0..3.5);
     State::Wander { to, t: 6.0 }
 }
 

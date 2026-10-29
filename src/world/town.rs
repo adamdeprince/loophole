@@ -555,8 +555,8 @@ mod tests {
 
     #[test]
     fn words_keep_quotes_and_drop_comments() {
-        let w = words(r#"building shop "Bare Paws Books" 1 2 3 4 say="Hello there" # comment"#).unwrap();
-        assert_eq!(w, vec!["building", "shop", "Bare Paws Books", "1", "2", "3", "4", "say=Hello there"]);
+        let w = words(r#"building shop "Dog-Eared Books" 1 2 3 4 say="Hello there" # comment"#).unwrap();
+        assert_eq!(w, vec!["building", "shop", "Dog-Eared Books", "1", "2", "3", "4", "say=Hello there"]);
     }
 
     #[test]

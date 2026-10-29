@@ -51,6 +51,17 @@ pub enum Pose {
     Offer(u32),
     Laugh,
     Shout(u32),
+    /// A skip: a hop and a swing, four frames.
+    Skip(u32),
+}
+
+/// A pose's stride (-1 to 1) and how high a skip lifts.
+fn stride_of(pose: Pose) -> (f32, f32) {
+    match pose {
+        Pose::Walk(s) => (s, 0.0),
+        Pose::Skip(k) => ([0.9f32, 0.4, -0.9, -0.4][k as usize % 4], [1.0f32, 6.0, 1.0, 6.0][k as usize % 4]),
+        _ => (0.0, 0.0),
+    }
 }
 
 // ---------------------------------------------------------------- Loki --
@@ -145,7 +156,7 @@ fn loki_hood(p: &mut Painter, x: f32, y: f32, view: View) {
 
 fn loki_draw(p: &mut Painter, view: View, pose: Pose) {
     paint::shadow(p, 12.0, 3.5);
-    let lift = if let Pose::Jump(k) = pose { -(k as f32) * 8.0 } else { 0.0 };
+    let lift = if let Pose::Jump(k) = pose { -(k as f32) * 8.0 } else { -stride_of(pose).1 };
     let sit = pose == Pose::Sit;
     if pose == Pose::Sprawl {
         p.push(rot_about(-80.0, 0.0, -14.0));
@@ -156,7 +167,7 @@ fn loki_draw(p: &mut Painter, view: View, pose: Pose) {
         _ => 0.0,
     };
     p.push(rot_about(lean, 0.0, -18.0));
-    let step = if let Pose::Walk(s) = pose { s } else { 0.0 };
+    let (step, _) = stride_of(pose);
     let head_y = -42.0;
     // The tail, behind.
     if view != View::Back {
@@ -331,7 +342,7 @@ fn skadi_head(p: &mut Painter, x: f32, y: f32, view: View, mood: u8) {
 
 fn skadi_draw(p: &mut Painter, view: View, pose: Pose) {
     paint::shadow(p, 12.0, 3.5);
-    let lift = if let Pose::Jump(k) = pose { -(k as f32) * 10.0 } else { 0.0 };
+    let lift = if let Pose::Jump(k) = pose { -(k as f32) * 10.0 } else { -stride_of(pose).1 };
     if pose == Pose::Sprawl {
         p.push(rot_about(-80.0, 0.0, -20.0));
     }
@@ -344,7 +355,7 @@ fn skadi_draw(p: &mut Painter, view: View, pose: Pose) {
         _ => 0.0,
     };
     p.push(rot_about(lean, 0.0, -26.0));
-    let step = if let Pose::Walk(s) = pose { s } else { 0.0 };
+    let (step, _) = stride_of(pose);
     // The tail, safety-pinned to the back of the dress.
     let mut tail = PathData::new();
     let tx = if view == View::Side { -7.0 } else { 6.0 };
@@ -420,20 +431,21 @@ const M_HAIR: Color = Color::hex(0xc8401e);
 const M_HAIR_LIGHT: Color = Color::hex(0xe8683a);
 const JUG: Color = Color::hex(0xd08a2a);
 
-/// Their mother: a big woman (broad shoulders, round arms, a soft double
-/// chin, wide hips) in a bigger jug of maple syrup.
+/// Their mother: a sturdy, round woman (broad shoulders, round arms, a soft
+/// double chin) in a big jug of maple syrup, her red hair in a very long
+/// ponytail brought forward over one shoulder.
 fn mom_draw(p: &mut Painter, pose: Pose) {
     paint::shadow(p, 30.0, 6.0);
     let lean = if pose == Pose::Laugh { -5.0 } else { 0.0 };
     p.push(rot_about(lean, 0.0, -30.0));
     // Sturdy legs and sensible shoes under the jug.
     for x in [-11.0f32, 11.0] {
-        limb(p, (x, -18.0), (x * 1.05, -4.0), 10.0, Color::hex(0x3a3048));
+        limb(p, (x * 0.92, -18.0), (x * 0.95, -4.0), 9.0, Color::hex(0x3a3048));
         p.inked(&PathData::round_rect(x - 7.0, -7.0, 14.0, 7.0, 3.0), Color::hex(0x5a3a2a), INK, 0.8);
     }
     // The jug: amber, round-shouldered, with a handle and a label.
     let top = -76.0;
-    let w = 34.0;
+    let w = 29.0;
     let jug = PathData::smooth_closed(&[(-w * 0.62, top), (w * 0.62, top), (w * 0.98, top + 12.0), (w * 1.05, -22.0), (w * 0.9, -12.0), (-w * 0.9, -12.0), (-w * 1.05, -22.0), (-w * 0.98, top + 12.0)], 0.7);
     p.inked(&jug, JUG, INK, 1.4);
     p.radial(&jug, -12.0, top + 14.0, 50.0, &[(0.0, Color::rgba(255, 224, 150, 160)), (1.0, Color::rgba(150, 80, 16, 0))]);
@@ -456,13 +468,14 @@ fn mom_draw(p: &mut Painter, pose: Pose) {
         Pose::Laugh => ((-26.0, -58.0), (22.0, -88.0)),
         _ => ((-21.0, -57.0), (21.0, -57.0)),
     };
-    limb(p, (-w * 0.72, top + 6.0), h1, 9.5, M_SKIN);
-    limb(p, (w * 0.72, top + 6.0), h2, 9.5, M_SKIN);
+    limb(p, (-w * 0.72, top + 6.0), h1, 8.5, M_SKIN);
+    limb(p, (w * 0.72, top + 6.0), h2, 8.5, M_SKIN);
     // Her head, a cloud of red curls, the jug's cap for a hat.
     let hy = top - 13.0;
-    let curls = Cloud::new(0.0, hy - 2.0, 19.0, 15.0, 11, 0.42, 97);
-    p.cloud_lit(&curls, INK, 1.1, -6.0, hy - 10.0, &[(0.0, M_HAIR_LIGHT), (1.0, M_HAIR)]);
-    p.inked(&PathData::ellipse(0.0, hy + 1.0, 14.0, 13.0), M_SKIN, INK, 1.1);
+    // Hair pulled back, smooth on top.
+    let cap = PathData::smooth_closed(&[(-14.0, hy + 2.0), (-13.0, hy - 10.0), (0.0, hy - 16.0), (13.0, hy - 10.0), (14.0, hy + 2.0), (0.0, hy - 8.0)], 0.6);
+    p.inked(&cap, M_HAIR, INK, 1.1);
+    p.inked(&PathData::ellipse(0.0, hy + 1.0, 13.0, 12.5), M_SKIN, INK, 1.1);
     let mut chin = PathData::new();
     chin.move_to(-7.0, hy + 11.0).quad_to(0.0, hy + 15.5, 7.0, hy + 11.0);
     p.stroke(&chin, INK.with_alpha(130), 1.0);
@@ -486,6 +499,61 @@ fn mom_draw(p: &mut Painter, pose: Pose) {
         p.inked(&mouth, Color::hex(0xb03a48), INK, 0.6);
     }
     p.inked(&PathData::round_rect(-8.0, hy - 21.0, 16.0, 7.0, 2.0), Color::hex(0xd8302a), INK, 0.8);
+    // The ponytail: gathered behind her ear, brought forward over her
+    // shoulder and down the front of the jug, nearly to her waist, tapering
+    // to a soft tip.
+    let curve = |t: f32| -> (f32, f32) {
+        // A gentle S: one cubic over the shoulder, one down the front.
+        let cubic = |p0: (f32, f32), p1: (f32, f32), p2: (f32, f32), p3: (f32, f32), u: f32| {
+            let v = 1.0 - u;
+            (
+                v * v * v * p0.0 + 3.0 * v * v * u * p1.0 + 3.0 * v * u * u * p2.0 + u * u * u * p3.0,
+                v * v * v * p0.1 + 3.0 * v * v * u * p1.1 + 3.0 * v * u * u * p2.1 + u * u * u * p3.1,
+            )
+        };
+        let mid = (w * 0.66, top + 16.0);
+        if t < 0.4 {
+            cubic((11.0, hy + 3.0), (20.0, hy + 8.0), (w * 0.82, top + 2.0), mid, t / 0.4)
+        } else {
+            cubic(mid, (w * 0.54, top + 30.0), (w * 0.6, top + 44.0), (w * 0.5, top + 58.0), (t - 0.4) / 0.6)
+        }
+    };
+    let n = 24;
+    let mut left = Vec::new();
+    let mut right = Vec::new();
+    for k in 0..=n {
+        let t = k as f32 / n as f32;
+        let (x, y) = curve(t);
+        let (x2, y2) = curve((t + 0.02).min(1.0));
+        let (dx, dy) = if k == n { let (x0, y0) = curve(t - 0.02); (x - x0, y - y0) } else { (x2 - x, y2 - y) };
+        let len = (dx * dx + dy * dy).sqrt().max(0.001);
+        let (nx, ny) = (-dy / len, dx / len);
+        let half = 3.9 * (1.0 - t * 0.6) + (t * 14.0).sin() * 0.3;
+        left.push((x + nx * half, y + ny * half));
+        right.push((x - nx * half, y - ny * half));
+    }
+    right.reverse();
+    left.extend(right);
+    let hank = PathData::smooth_closed(&left, 0.5);
+    p.inked(&hank, M_HAIR, INK, 0.9);
+    let mut strands = PathData::new();
+    for off in [-1.4f32, 0.2, 1.5] {
+        let mut first = true;
+        for k in 1..n {
+            let t = k as f32 / n as f32;
+            let (x, y) = curve(t);
+            let (x, y) = (x + off * (1.0 - t * 0.6), y);
+            if first {
+                strands.move_to(x, y);
+                first = false;
+            } else {
+                strands.line_to(x, y);
+            }
+        }
+    }
+    p.stroke(&strands, M_HAIR_LIGHT.with_alpha(170), 0.8);
+    // The tie.
+    p.inked(&PathData::ellipse(12.5, hy + 4.0, 3.0, 2.2), Color::hex(0x2e8a4a), INK, 0.6);
     hand(p, h1, 4.0, M_SKIN);
     hand(p, h2, 4.0, M_SKIN);
     // The platter of hákarl, and the smell.
@@ -591,6 +659,176 @@ fn ethan_draw(p: &mut Painter, pose: Pose) {
     p.stroke(&sprig, Color::hex(0x2e8a4a), 1.3);
 }
 
+// --------------------------------------------------------- Robert Frost --
+
+const TWEED: Color = Color::hex(0x7d6a52);
+const TWEED_FLECK: Color = Color::hex(0xa8957a);
+const F_SKIN: Color = Color::hex(0xeec4a6);
+const F_HAIR: Color = Color::hex(0xf2f0ea);
+
+/// Robert Frost (1874 to 1963), poet, Vermont's poet laureate: a shock of
+/// white hair, heavy white brows, a rumpled tweed jacket and a book, in the
+/// library door. `Pose::Shout` here is reciting, a hand keeping time.
+fn frost_draw(p: &mut Painter, pose: Pose) {
+    paint::shadow(p, 15.0, 4.0);
+    // Trousers and sensible shoes.
+    for x in [-5.5f32, 5.5] {
+        limb(p, (x * 0.8, -44.0), (x, -6.0), 8.0, Color::hex(0x4a4a50));
+        p.inked(&PathData::ellipse(x + 1.5, -3.0, 6.0, 3.0), Color::hex(0x4a2e1e), INK, 0.8);
+    }
+    // White shirt, a loosened tie, and the jacket over it, a little big.
+    p.inked(&PathData::polygon(&[(-7.0, -86.0), (7.0, -86.0), (5.0, -50.0), (-5.0, -50.0)]), Color::hex(0xf4f2ec), INK, 0.8);
+    let mut tie = PathData::new();
+    tie.move_to(0.0, -84.0).line_to(2.6, -78.0).line_to(1.0, -60.0).line_to(-1.5, -62.0).line_to(-1.6, -78.0).close();
+    p.inked(&tie, Color::hex(0x7a2a2a), INK, 0.6);
+    let coat_l = PathData::smooth_closed(&[(-7.0, -87.0), (-15.0, -84.0), (-18.0, -60.0), (-17.0, -40.0), (-3.0, -38.0), (-4.0, -60.0)], 0.3);
+    let coat_r = PathData::smooth_closed(&[(7.0, -87.0), (15.0, -84.0), (18.0, -60.0), (17.0, -40.0), (3.0, -38.0), (4.0, -60.0)], 0.3);
+    p.inked(&coat_l, TWEED, INK, 1.1);
+    p.inked(&coat_r, TWEED, INK, 1.1);
+    // Herringbone, more or less.
+    let mut fleck = PathData::new();
+    for k in 0..6 {
+        let y = -80.0 + k as f32 * 6.5;
+        for x in [-13.0f32, -9.0, 9.0, 13.0] {
+            fleck.move_to(x - 1.5, y).line_to(x, y - 1.5).line_to(x + 1.5, y);
+        }
+    }
+    p.stroke(&fleck, TWEED_FLECK, 0.7);
+    // Elbow patches are implied. One hand holds the book open; the other
+    // keeps time with the verse.
+    let book_at = (-9.0, -58.0);
+    let free = match pose {
+        Pose::Shout(k) => (16.0, -70.0 - k as f32 * 6.0),
+        _ => (15.0, -52.0),
+    };
+    limb(p, (-13.0, -82.0), (book_at.0 - 2.0, book_at.1 + 2.0), 6.5, TWEED);
+    limb(p, (13.0, -82.0), free, 6.5, TWEED);
+    let book = PathData::polygon(&[(book_at.0 - 10.0, book_at.1 - 4.0), (book_at.0, book_at.1 - 1.0), (book_at.0 + 10.0, book_at.1 - 4.0), (book_at.0 + 10.0, book_at.1 + 5.0), (book_at.0, book_at.1 + 8.0), (book_at.0 - 10.0, book_at.1 + 5.0)]);
+    p.inked(&book, Color::hex(0xfaf6e8), INK, 0.8);
+    let mut spine = PathData::new();
+    spine.move_to(book_at.0, book_at.1 - 1.0).line_to(book_at.0, book_at.1 + 8.0);
+    for k in 0..3 {
+        let y = book_at.1 + k as f32 * 2.2;
+        spine.move_to(book_at.0 - 8.0, y - 1.5).line_to(book_at.0 - 2.0, y);
+        spine.move_to(book_at.0 + 2.0, y).line_to(book_at.0 + 8.0, y - 1.5);
+    }
+    p.stroke(&spine, INK.with_alpha(140), 0.6);
+    hand(p, (book_at.0 - 1.0, book_at.1 + 5.0), 3.0, F_SKIN);
+    hand(p, free, 3.0, F_SKIN);
+    // The head: broad, lined, kindly, with that hair.
+    let hy = -98.0;
+    p.inked(&PathData::round_rect(-3.5, hy + 8.0, 7.0, 6.0, 2.0), F_SKIN, INK, 0.8);
+    p.inked(&PathData::ellipse(0.0, hy, 11.0, 12.0), F_SKIN, INK, 1.1);
+    let hair = PathData::smooth_closed(
+        &[(-12.0, hy - 1.0), (-14.0, hy - 9.0), (-9.0, hy - 15.0), (-3.0, hy - 19.0), (4.0, hy - 17.0), (11.0, hy - 15.0), (15.0, hy - 8.0), (12.0, hy - 1.0), (8.0, hy - 9.0), (0.0, hy - 11.0), (-7.0, hy - 9.0)],
+        0.35,
+    );
+    p.inked(&hair, F_HAIR, INK, 1.0);
+    // Tousled at the temples, and a lock the wind got at.
+    for (x, d) in [(-12.5f32, -1.0f32), (12.5, 1.0)] {
+        let tuft = PathData::polygon(&[(x, hy - 7.0), (x + d * 5.0, hy - 6.0), (x + d * 2.5, hy - 3.0), (x + d * 5.5, hy - 1.0), (x + d * 1.0, hy + 1.0)]);
+        p.inked(&tuft, F_HAIR, INK, 0.8);
+    }
+    let lock = PathData::polygon(&[(-2.0, hy - 17.0), (3.0, hy - 22.0), (2.0, hy - 18.0), (7.0, hy - 20.0), (4.0, hy - 15.0)]);
+    p.inked(&lock, F_HAIR, INK, 0.8);
+    // Heavy white brows, eyes with a twinkle, lines of a long life.
+    let mut brow = PathData::new();
+    brow.move_to(-8.0, hy - 4.0).quad_to(-5.0, hy - 6.5, -1.5, hy - 4.0);
+    brow.move_to(8.0, hy - 4.0).quad_to(5.0, hy - 6.5, 1.5, hy - 4.0);
+    p.stroke(&brow, INK, 3.0);
+    p.stroke(&brow, F_HAIR, 2.0);
+    paint::eye(p, -4.5, hy - 1.0, 1.6, 1.0, INK);
+    paint::eye(p, 4.5, hy - 1.0, 1.6, 1.0, INK);
+    let mut lines = PathData::new();
+    lines.move_to(-9.0, hy - 1.5).line_to(-7.5, hy - 0.5).move_to(9.0, hy - 1.5).line_to(7.5, hy - 0.5);
+    lines.move_to(-5.0, hy + 4.0).quad_to(-6.0, hy + 7.0, -4.0, hy + 9.0);
+    lines.move_to(5.0, hy + 4.0).quad_to(6.0, hy + 7.0, 4.0, hy + 9.0);
+    p.stroke(&lines, INK.with_alpha(110), 0.7);
+    let mut nose = PathData::new();
+    nose.move_to(0.0, hy - 1.0).quad_to(2.5, hy + 4.0, -0.5, hy + 5.0);
+    p.stroke(&nose, INK.with_alpha(160), 0.9);
+    if let Pose::Shout(k) = pose {
+        p.inked(&PathData::ellipse(0.0, hy + 8.0, 2.6, 1.2 + k as f32 * 0.8), Color::hex(0x6a2028), INK, 0.6);
+    } else {
+        let mut m = PathData::new();
+        m.move_to(-3.0, hy + 8.0).quad_to(0.0, hy + 9.5, 3.0, hy + 8.0);
+        p.stroke(&m, INK, 1.0);
+    }
+}
+
+// ------------------------------------------------------ Calvin Coolidge --
+
+const SUIT: Color = Color::hex(0x2c2e36);
+const SUIT_LIGHT: Color = Color::hex(0x3c3f4a);
+const C_SKIN: Color = Color::hex(0xf0cdb2);
+const C_HAIR: Color = Color::hex(0xb8764a);
+
+/// Calvin Coolidge (1872 to 1933), of Plymouth Notch, thirtieth President:
+/// slight, upright, a dark three-piece suit with a watch chain, a wing
+/// collar, sandy hair parted on the side, a long face and a mouth that has
+/// said all it means to. `Pose::Offer` holds out a plate: maple candy and a
+/// wedge of cheddar.
+fn coolidge_draw(p: &mut Painter, pose: Pose) {
+    paint::shadow(p, 13.0, 3.5);
+    for x in [-4.5f32, 4.5] {
+        limb(p, (x * 0.8, -44.0), (x, -6.0), 7.0, SUIT);
+        p.inked(&PathData::ellipse(x + 1.5, -3.0, 5.5, 2.6), Color::hex(0x121214), INK, 0.8);
+    }
+    // Jacket, narrow and buttoned high, with the waistcoat and its chain.
+    let coat = PathData::smooth_closed(&[(-12.0, -86.0), (12.0, -86.0), (14.0, -60.0), (14.0, -40.0), (0.0, -38.0), (-14.0, -40.0), (-14.0, -60.0)], 0.25);
+    p.inked(&coat, SUIT, INK, 1.1);
+    p.fill(&PathData::polygon(&[(-5.0, -84.0), (5.0, -84.0), (4.0, -50.0), (-4.0, -50.0)]), SUIT_LIGHT);
+    let mut chain = PathData::new();
+    chain.move_to(-3.5, -62.0).quad_to(0.0, -58.0, 3.5, -62.0);
+    p.stroke(&chain, Color::hex(0xe0b840), 0.9);
+    let mut lapel = PathData::new();
+    lapel.move_to(-6.0, -86.0).line_to(-3.0, -66.0).move_to(6.0, -86.0).line_to(3.0, -66.0);
+    p.stroke(&lapel, INK, 0.9);
+    // The wing collar and a dark tie.
+    p.inked(&PathData::polygon(&[(-5.0, -88.0), (5.0, -88.0), (4.0, -84.0), (-4.0, -84.0)]), Color::hex(0xfbfaf6), INK, 0.6);
+    p.inked(&PathData::polygon(&[(-1.5, -84.0), (1.5, -84.0), (1.0, -74.0), (-1.0, -74.0)]), Color::hex(0x1a1a20), INK, 0.4);
+    // Arms: at his sides, or holding out the plate.
+    let offering = matches!(pose, Pose::Offer(_));
+    let (l, r) = if offering { ((-6.0, -60.0), (6.0, -60.0)) } else { ((-14.0, -50.0), (14.0, -50.0)) };
+    limb(p, (-11.0, -82.0), l, 6.0, SUIT);
+    limb(p, (11.0, -82.0), r, 6.0, SUIT);
+    if offering {
+        p.inked(&PathData::ellipse(0.0, -63.0, 13.0, 3.6), Color::hex(0xf4f2ec), INK, 0.8);
+        p.inked(&PathData::polygon(&[(-9.0, -64.0), (-1.0, -64.0), (-1.0, -69.0)]), Color::hex(0xf2b33a), INK, 0.6);
+        for x in [3.0f32, 7.5] {
+            p.inked(&PathData::ellipse(x, -65.5, 2.6, 1.8), Color::hex(0xc8782a), INK, 0.5);
+        }
+    }
+    hand(p, l, 2.8, C_SKIN);
+    hand(p, r, 2.8, C_SKIN);
+    // The head: long and narrow.
+    let hy = -100.0;
+    p.inked(&PathData::round_rect(-3.0, hy + 9.0, 6.0, 5.0, 2.0), C_SKIN, INK, 0.8);
+    p.inked(&PathData::ellipse(0.0, hy, 8.5, 12.0), C_SKIN, INK, 1.1);
+    // Thin sandy hair, parted on his left and combed flat.
+    let hair = PathData::smooth_closed(&[(-8.5, hy - 2.0), (-8.0, hy - 9.0), (-3.0, hy - 12.5), (4.0, hy - 12.0), (8.5, hy - 6.0), (8.6, hy - 2.0), (6.0, hy - 7.5), (-2.0, hy - 9.0), (-5.0, hy - 6.0)], 0.3);
+    p.inked(&hair, C_HAIR, INK, 0.9);
+    let mut part = PathData::new();
+    part.move_to(-3.5, hy - 12.0).line_to(-5.5, hy - 7.0);
+    p.stroke(&part, INK.with_alpha(150), 0.7);
+    // Level brows, steady eyes, a long nose, and the mouth: a straight line,
+    // turned down a little at the ends. It stays shut.
+    let mut brow = PathData::new();
+    brow.move_to(-6.0, hy - 3.5).line_to(-1.8, hy - 3.2).move_to(6.0, hy - 3.5).line_to(1.8, hy - 3.2);
+    p.stroke(&brow, Color::hex(0x8a5a3a), 1.3);
+    paint::eye(p, -3.6, hy - 0.5, 1.4, 1.0, INK);
+    paint::eye(p, 3.6, hy - 0.5, 1.4, 1.0, INK);
+    let mut nose = PathData::new();
+    nose.move_to(0.0, hy - 1.0).line_to(1.4, hy + 5.0).line_to(-0.6, hy + 5.5);
+    p.stroke(&nose, INK.with_alpha(160), 0.8);
+    let mut m = PathData::new();
+    m.move_to(-3.4, hy + 8.6).line_to(-2.4, hy + 8.0).line_to(2.4, hy + 8.0).line_to(3.4, hy + 8.6);
+    p.stroke(&m, INK, 1.1);
+    let mut lines = PathData::new();
+    lines.move_to(-4.5, hy + 5.0).line_to(-4.0, hy + 9.0).move_to(4.5, hy + 5.0).line_to(4.0, hy + 9.0);
+    p.stroke(&lines, INK.with_alpha(90), 0.6);
+}
+
 // --------------------------------------------------------------- sheets --
 
 fn child_sheet(name: &str, tile_px: u32, vector: bool, draw: fn(&mut Painter, View, Pose)) -> super::Painted {
@@ -613,6 +851,9 @@ fn child_sheet(name: &str, tile_px: u32, vector: bool, draw: fn(&mut Painter, Vi
             f(&mut sb, &format!("walk_{dir}"), view, Pose::Walk(s), left);
         }
         f(&mut sb, &format!("stand_{dir}"), view, Pose::Stand, left);
+        for k in 0..4 {
+            f(&mut sb, &format!("skip_{dir}"), view, Pose::Skip(k), left);
+        }
     }
     f(&mut sb, "hold", View::Front, Pose::Hold, false);
     for (dir, left) in [("right", false), ("left", true)] {
@@ -662,6 +903,24 @@ pub fn ethan_sheet(tile_px: u32, vector: bool) -> super::Painted {
     sb.finish_any()
 }
 
+/// Calvin Coolidge: `stand`, `offer`.
+pub fn coolidge_sheet(tile_px: u32, vector: bool) -> super::Painted {
+    let mut sb = SheetBuilder::new("coolidge", (96.0, 150.0), (48.0, 140.0), tile_px).vector(vector);
+    sb.frame("stand", |p| coolidge_draw(p, Pose::Stand));
+    sb.frame("offer", |p| coolidge_draw(p, Pose::Offer(0)));
+    sb.finish_any()
+}
+
+/// Robert Frost: `stand`, `recite` (two).
+pub fn frost_sheet(tile_px: u32, vector: bool) -> super::Painted {
+    let mut sb = SheetBuilder::new("frost", (96.0, 150.0), (48.0, 140.0), tile_px).vector(vector);
+    sb.frame("stand", |p| frost_draw(p, Pose::Stand));
+    for k in 0..2 {
+        sb.frame("recite", move |p| frost_draw(p, Pose::Shout(k)));
+    }
+    sb.finish_any()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -669,7 +928,7 @@ mod tests {
     #[test]
     fn the_family_paints_both_ways() {
         for v in [false, true] {
-            for s in [loki_sheet(48, v), skadi_sheet(48, v), mom_sheet(48, v), ethan_sheet(48, v)] {
+            for s in [loki_sheet(48, v), skadi_sheet(48, v), mom_sheet(48, v), ethan_sheet(48, v), frost_sheet(48, v), coolidge_sheet(48, v)] {
                 assert!(s.width > 0 && s.height > 0);
                 assert_eq!(s.pixels.is_some(), !v);
             }

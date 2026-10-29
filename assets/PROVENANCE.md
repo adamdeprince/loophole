@@ -18,6 +18,13 @@ sheet.
 * `mom`: their mother, in a maple syrup jug costume.
 * `ethan`: Ethan Allen (1738 to 1789), leader of the Green Mountain Boys, as
   a cartoon in period dress.
+* `frost`: Robert Frost (1874 to 1963), poet, as a cartoon in tweed with a
+  book. The verses he quotes are from his poems published from 1913 to
+  1923, in the public domain in the United States (see `FROST` in
+  `src/sim/lines.rs`).
+* `coolidge`: Calvin Coolidge (1872 to 1933), thirtieth President, born in
+  Plymouth Notch, Vermont, as a cartoon in a three-piece suit with a plate
+  of maple candy and cheddar.
 * `folk0` to `folk40`: townsfolk, procedural: children in ten costumes and
   grown-ups of every build.
 * `gravy`, `pets`: Gravy the corded dog, the black cat, walked dogs.
@@ -32,8 +39,10 @@ other game.
 `src/gfx/scenery.rs` and `src/gfx/minimap.rs` draw the town from the town
 file: original. The town is Montpelier, Vermont, drawn from memory and
 simplified. Public places keep their own names; shops, restaurants and
-hotels have made-up ones, and their jokes are not about the real
-businesses.
+hotels are invented, with names chosen to be well away from any real
+business's, and their jokes are not about real businesses or people. The
+game is a work of fiction and gentle parody, and says so on its title
+screen.
 
 ## Typeface
 

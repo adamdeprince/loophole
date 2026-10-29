@@ -108,9 +108,16 @@ pub struct Town {
     pub index: FeatureIndex,
     /// Index of the children's house.
     pub home: usize,
+    /// Tiles with a trunk, a pole or a statue in them: paths go round.
+    pub cluttered: Vec<bool>,
 }
 
 impl Town {
+    /// Whether a tile has a trunk, a pole or the like in it.
+    pub fn is_cluttered(&self, x: i32, y: i32) -> bool {
+        x >= 0 && y >= 0 && (x as u32) < self.w && (y as u32) < self.h && self.cluttered[(y as usize) * self.w as usize + x as usize]
+    }
+
     pub fn size(&self) -> Vec2 {
         Vec2::new(self.w as f32, self.h as f32)
     }
@@ -141,7 +148,7 @@ impl Town {
             .map(|(s, _)| s)
     }
 
-    /// Words for where `p` is: "on Main Street, outside Bare Paws Books".
+    /// Words for where `p` is: "on Main Street, outside Dog-Eared Books".
     pub fn describe(&self, p: Vec2) -> String {
         if self.grid.at(p) == Terrain::Water {
             let r = self
@@ -170,6 +177,27 @@ impl Town {
                 None => "in somebody's back yard".to_string(),
             },
         }
+    }
+
+    /// The nearest point to `p` where a body of radius `r` can stand, looking
+    /// out in rings up to `within` tiles away.
+    pub fn open_near(&self, p: Vec2, r: f32, swim: bool, within: f32) -> Option<Vec2> {
+        if self.clear(p, r, swim) {
+            return Some(p);
+        }
+        let rings = (within / 0.25).ceil() as u32;
+        for ring in 1..=rings {
+            let d = ring as f32 * 0.25;
+            let n = (d * 12.0).ceil().max(8.0) as u32;
+            for k in 0..n {
+                let a = k as f32 / n as f32 * std::f32::consts::TAU;
+                let q = p + Vec2::new(a.cos(), a.sin()) * d;
+                if self.clear(q, r, swim) {
+                    return Some(q);
+                }
+            }
+        }
+        None
     }
 
     /// Whether a circle of radius `r` at `p` is clear of walls, water (when
@@ -395,6 +423,13 @@ pub fn build(spec: &TownSpec) -> Town {
         add(&mut features, FeatureKind::EggBasket, p, 1.0, Some(home), 7);
     }
     let index = FeatureIndex::new(spec.width, spec.height, &features);
+    let mut cluttered = vec![false; (spec.width as usize) * (spec.height as usize)];
+    for f in features.iter().filter(|f| f.kind.solid_radius() > 0.0) {
+        let (x, y) = (f.pos.x.floor() as i64, f.pos.y.floor() as i64);
+        if x >= 0 && y >= 0 && (x as u32) < spec.width && (y as u32) < spec.height {
+            cluttered[(y as usize) * spec.width as usize + x as usize] = true;
+        }
+    }
     Town {
         name: spec.name.clone(),
         w: spec.width,
@@ -408,6 +443,7 @@ pub fn build(spec: &TownSpec) -> Town {
         grid,
         index,
         home,
+        cluttered,
     }
 }
 

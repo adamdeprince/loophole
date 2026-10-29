@@ -112,6 +112,16 @@ fn candy(p: &mut Painter, c: Candy) {
             p.inked(&PathData::round_rect(-8.0, -3.5, 16.0, 3.0, 1.5), Color::hex(0x3a8ad0), INK, 0.5);
             p.fill(&PathData::rect(4.0, -6.5, 4.0, 3.0), Color::hex(0xf6f6f6));
         }
+        Candy::CiderDonut => {
+            let mut ring = PathData::circle(0.0, -5.5, 5.8);
+            ring.extend(&PathData::circle(0.0, -5.5, 1.8));
+            p.inked(&ring, Color::hex(0xc8884a), INK, 0.6);
+            let mut sugar = PathData::new();
+            for (x, y) in [(-3.5f32, -8.0f32), (2.5, -9.5), (4.0, -4.5), (-2.5, -2.5), (0.5, -1.5)] {
+                sugar.extend(&PathData::circle(x, y, 0.6));
+            }
+            p.fill(&sugar, Color::hex(0xf6ead0));
+        }
         Candy::Pennies => {
             for (x, y) in [(-3.0f32, -2.0f32), (3.0, -2.5), (0.0, -4.5)] {
                 p.inked(&PathData::circle(x, y, 2.6), Color::hex(0xb86a3a), INK, 0.4);

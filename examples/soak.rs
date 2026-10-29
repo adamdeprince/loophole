@@ -29,6 +29,14 @@ fn main() {
             4 => input.eat = true,
             5 => input.patch = true,
             6 => input.goto = Some(Vec2::new(rng.random_range(0.0..t.w as f32), rng.random_range(0.0..t.h as f32))),
+            // Something out of the bag, eaten or given to whoever is near.
+            7 | 8 => {
+                let kinds: Vec<_> = g.raccoon.bag.kinds().map(|(c, _)| c).collect();
+                if !kinds.is_empty() {
+                    let c = kinds[rng.random_range(0..kinds.len())];
+                    if k % 2 == 0 { input.give = Some(c) } else { input.eat_this = Some(c) }
+                }
+            }
             _ => {}
         }
         // Now and then, somewhere else entirely (the far corners included).

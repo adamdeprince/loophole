@@ -6,9 +6,10 @@
 # simplified: fix anything that is wrong here, the game reads it at start.
 # The format is described in README.md next to this file.
 #
-# Shops, restaurants and hotels have made-up names. Public places (the State
-# House, the library, the fire station, City Hall, the churches, the post
-# office, the college) are themselves.
+# Shops, restaurants and hotels have made-up names, kept well away from the
+# real ones and never at anybody's expense. Public places (the State House,
+# the library, the fire station, City Hall, the churches, the post office,
+# the college) are themselves.
 
 town "Montpelier" 260 196
 seed 1791
@@ -55,16 +56,16 @@ area lawn "the State House lawn" : 22,112.2 60,112.2 60,126.6 22,126.6
 area lawn "the State House grounds" : 22,94 60,94 60,98 22,98
 area green "the college green" : 200,90 256,90 256,118 236,120 224,119 200,118
 area parking "the parking lot behind Christ Church" : 103,144 113,144 113,154 103,154
-area parking "the Pshaw's parking lot" : 122.6,169 131.6,169 131.6,169.6 122.6,169.6
+area parking "the Big Basket parking lot" : 122.6,169 131.6,169 131.6,169.6 122.6,169.6
 area plaza "City Hall plaza" : 131.6,142.6 131.6,144.6 122.6,144.6 122.6,142.6
 
 # ---------------------------------------------------- the State House end --
-building statehouse "the Vermont State House" 28 98 28 14 door=S say="Welcome to the Republic of Vermont, est. 1777. We joined the Union in 1791 and some of us are still thinking it over. Maple candy?" gives=maple
+building statehouse "the Vermont State House" 28 98 28 14 door=S say="A plaque by the door: REPUBLIC OF VERMONT, EST. 1777. Joined the Union in 1791. Some of us are still thinking it over." gives=maple
 building museum "the Pavilion Building and the Vermont History Museum" 11 114 10 12.4 door=S say="Ooh, a ghost! We have a whole exhibit about those."
 building court "the Vermont Supreme Court" 68 117 10 9.5 door=S say="Court is adjourned. Overruled, take a candy."
-building restaurant "Capitol Grinds" 81 120 8 6.5 door=S say="Decaf for the ghost. And a cookie."
-building shop "Woodenly Mountain Toys" 91 120 8 6.5 door=S say="Every ghost gets a wooden yo-yo. Kidding, here's candy."
-building hotel "the Capitol Pizazz Hotel" 44 134 15 9 door=N say="Room service! One candy, delivered."
+building restaurant "the Steaming Mug" 81 120 8 6.5 door=S say="Decaf for the ghost. And a cookie."
+building shop "the Whirligig Toy Barn" 91 120 8 6.5 door=S say="Every ghost gets a wooden yo-yo. Kidding, here's candy."
+building hotel "the Granite Pillow Hotel" 44 134 15 9 door=N say="Room service! One candy, delivered."
 building office "a state office building" 62 134 12 10 door=N
 building office "another state office building" 50 148 16 9 door=N
 building office "the Department of Fiddleheads and Maple" 72 150 14 8 door=W
@@ -72,29 +73,29 @@ area parking "a state parking lot" : 50,159 86,159 86,166 50,166
 area parking "a state parking lot" : 4,148 30,148 30,162 4,162
 building postoffice "the Post Office" 78 134 10 8 door=N say="Neither rain nor sleet nor ghost. Here, first class candy."
 building church "Christ Church" 103.5 134 7 9 door=N say="Bless you, little ghost."
-building restaurant "Sardonic's Riverside" 103 156 9 6.5 door=W say="Oh, how original. A sheet. Here's a mint."
+building restaurant "Noodle Bend Trattoria" 103 156 9 6.5 door=W say="A ghost! Breadstick? No? A mint, then. Buona notte!"
 
 # ---------------------------------------------- Main Street, west side --
-building shop "Rubble-Rouser Chocolate" 123 77 8.6 7 door=E say="Single-origin, bean-to-bar, for a single-origin ghost." gives=chocolate
-building library "the Kellogg-Hubbard Library" 122.6 86 9 12.5 door=E say="Shh! Bookmarks and candy, both are free." gives=bookmark
-building shop "Bare Paws Books" 123 100 8.6 7 door=E say="You look like a reader. Take a bookmark AND a candy." gives=bookmark
-building restaurant "Two Bit Taproom" 123 108.5 8.6 5.5 door=E say="Root beer barrel for the little spook."
-building restaurant "Plausible Pie" 123 119 8.6 7.4 door=E say="Pie? No pie. Candy, though."
+building shop "Green Rooster Ice Cream" 123 77 8.6 7 door=E say="Maple creemee in October? This is Vermont, creemee season never ends. Have a chocolate." gives=chocolate
+building library "the Kellogg-Hubbard Library" 122.6 86 9 12.5 door=E gives=bookmark
+building shop "Dog-Eared Books" 123 100 8.6 7 door=E say="You look like a reader. Take a bookmark AND a candy." gives=bookmark
+building restaurant "the Hop Loft" 123 108.5 8.6 5.5 door=E say="Root beer barrel for the little spook."
+building restaurant "Pie in the Sky" 123 119 8.6 7.4 door=E say="Pie? No pie. Candy, though."
 building cityhall "City Hall" 122.6 134 9 8.6 door=E say="City Hall is closed. Here's a pamphlet about composting." gives=pamphlet
 building firehouse "the Fire Station" 122.6 145 9 8 door=E say="Stop, drop and roll! Here's a sticker and a candy." gives=sticker
-building restaurant "Down Hole Kitchen" 123 155 8.6 5 door=E say="Biscuit? No? Candy then."
-building grocery "Pshaw's Supermarket" 122.6 161.5 9 7.2 door=E say="Aisle seven: candy. Take some, we overordered."
+building restaurant "Biscuit Hollow Kitchen" 123 155 8.6 5 door=E say="Biscuit? No? Candy then."
+building grocery "the Big Basket Market" 122.6 161.5 9 7.2 door=E say="Aisle seven: candy. Take some, we overordered."
 
 # ---------------------------------------------- Main Street, east side --
 building church "the Unitarian Church" 138.4 83 8.5 9.5 door=W say="Welcome, all spirits."
-building shop "Onion River Indoors" 138.4 99 7 3.3 door=W say="Gear for the great indoors. Candy's by the register."
+building shop "Muddy Boots Outfitters" 138.4 99 7 3.3 door=W say="Mud season's coming, ghost. Candy's by the register."
 building church "Bethany Church" 138.4 102.5 9 10.5 door=W say="Happy Halloween! Mind the step."
-building restaurant "The Chubby Pancake" 138.4 114.5 8 6 door=W say="Crêpe? Candy? Crêpe-candy?"
-building restaurant "Coffee Cornered" 138.4 121.5 8 5 door=W say="You're cornered. Have a candy."
-building theater "the Savory Theater" 138.4 133.4 8 7.6 door=W say="Tonight: Night of the Living Bread. Free popcorn ball." gives=popcorn
-building restaurant "Charlie Uh-Oh's" 138.4 147 7 6 door=W say="Uh-oh, a ghost. Here, kid."
-building shop "Oh Bushwhackin' Hardware" 138.4 159 9 5.5 door=W say="Need duct tape for that costume? Take a roll." gives=tape
-building coop "the Hungry Molehill Co-op" 150 159.2 16 5.2 door=S say="Ethically sourced carob drops. They're... candy-adjacent." gives=carob
+building restaurant "Crêpe Expectations" 138.4 114.5 8 6 door=W say="Crêpe? Candy? Crêpe-candy?"
+building restaurant "the Short Stack Diner" 138.4 121.5 8 5 door=W say="Booth for one ghost? Here, have a candy."
+building theater "the Lantern Light Cinema" 138.4 133.4 8 7.6 door=W say="Tonight: Night of the Living Bread. Free popcorn ball." gives=popcorn
+building restaurant "the Covered Bridge Tavern" 138.4 147 7 6 door=W say="A ghost at the tavern! Pretzel? Candy, then."
+building shop "Nuts & Bolts Hardware" 138.4 159 9 5.5 door=W say="Need duct tape for that costume? Take a roll." gives=tape
+building coop "the Turnip Truck Co-op" 150 159.2 16 5.2 door=S say="Ethically sourced carob drops. They're... candy-adjacent." gives=carob
 building church "St. Augustine Church" 172 160 9 5 door=N say="Bless your little sheet."
 
 # ------------------------------------------------------------ the college --
@@ -153,7 +154,7 @@ raspberry 50.3 12.3 1.1
 
 # -------------------------------------------- the hillside north of town --
 area woods "the sugarbush" : 176,0 260,0 260,44 216,50 182,40
-building shop "the Sap Happens Sugarhouse" 200 20 9 6 door=S say="Sugaring's in March, but we keep a jug for raccoons. I mean, kids." gives=maple
+building shop "the Sticky Bucket Sugarhouse" 200 20 9 6 door=S say="Sugaring's in March, but we keep a jug for raccoons. I mean, kids." gives=maple
 path "the sugarhouse lane" 1.4 : 168,64 186,48 204,26.8
 
 # Flags along State Street: the Stars and Stripes, and here and there the

@@ -156,10 +156,8 @@ impl App {
                         self.pending.act = true;
                         self.note_key();
                     }
-                    (_, Some('e')) => {
-                        self.pending.eat = true;
-                        self.note_key();
-                    }
+                    (_, Some('e')) => self.open_pick(false),
+                    (_, Some('g')) => self.open_pick(true),
                     (_, Some('f')) => {
                         self.pending.patch = true;
                         self.note_key();
@@ -184,6 +182,20 @@ impl App {
                     _ => {}
                 }
             }
+            Screen::Pick { give, sel } => {
+                let n = self.game.as_ref().map_or(0, |g| super::screens::pick_list(g, *give).len());
+                let digit = ch.and_then(|c| c.to_digit(10)).filter(|&d| d >= 1 && d as usize <= n);
+                match (k.code, ch) {
+                    (KeyCode::Up, _) | (_, Some('w')) if n > 0 => *sel = (*sel + n - 1) % n,
+                    (KeyCode::Down, _) | (_, Some('s')) if n > 0 => *sel = (*sel + 1) % n,
+                    _ if digit.is_some() => {
+                        *sel = digit.unwrap_or(1) as usize - 1;
+                        self.pick();
+                    }
+                    (KeyCode::Enter, _) | (_, Some(' ')) => self.pick(),
+                    _ => self.resume(),
+                }
+            }
             Screen::Paused { menu } => match (k.code, ch) {
                 (KeyCode::Up, _) | (_, Some('w')) => *menu = (*menu + PAUSE_MENU.len() - 1) % PAUSE_MENU.len(),
                 (KeyCode::Down, _) | (_, Some('s')) => *menu = (*menu + 1) % PAUSE_MENU.len(),
@@ -198,13 +210,51 @@ impl App {
         }
     }
 
+    /// E or G: what is in the bag, to pick from. With nothing to pick (or,
+    /// to give, nobody to give it to) the night goes on, and says why.
+    fn open_pick(&mut self, give: bool) {
+        let Some(g) = &mut self.game else { return };
+        if give && crate::sim::give::taker(g).is_none() {
+            g.say_message("Nobody close enough to give anything to.");
+            return;
+        }
+        if super::screens::pick_list(g, give).is_empty() {
+            if give {
+                g.say_message("The bag is empty.");
+            } else {
+                // The night says why there is nothing to eat.
+                self.pending.eat = true;
+            }
+            return;
+        }
+        self.held.clear();
+        self.screen = Screen::Pick { give, sel: 0 };
+        self.set_low_latency(false);
+    }
+
+    /// The highlighted piece: eaten, or given.
+    fn pick(&mut self) {
+        let Screen::Pick { give, sel } = self.screen else { return };
+        if let Some(g) = &self.game {
+            if let Some(&(c, _)) = super::screens::pick_list(g, give).get(sel) {
+                if give {
+                    self.pending.give = Some(c);
+                } else {
+                    self.pending.eat_this = Some(c);
+                }
+                self.note_key();
+            }
+        }
+        self.resume();
+    }
+
     pub fn pause(&mut self) {
         self.screen = Screen::Paused { menu: 0 };
         self.held.clear();
         self.set_low_latency(false);
     }
 
-    fn resume(&mut self) {
+    pub fn resume(&mut self) {
         self.screen = Screen::Play;
         self.set_low_latency(true);
     }
@@ -233,7 +283,7 @@ impl App {
         let press = matches!(m.kind, MouseKind::Press(MouseButton::Left));
         match &self.screen {
             Screen::Title if press => self.start_game(),
-            Screen::Paused { .. } if press => self.resume(),
+            Screen::Paused { .. } | Screen::Pick { .. } if press => self.resume(),
             Screen::Report | Screen::Help if matches!(m.kind, MouseKind::Press(_)) => {
                 if matches!(self.screen, Screen::Help) {
                     self.resume();
@@ -335,7 +385,7 @@ mod keys {
 
     #[test]
     fn the_letter_keys_for_screens_are_not_movement() {
-        for c in ['j', 'J', 'm', 'e', 'f', 'p', 'r', 'h', '?'] {
+        for c in ['j', 'J', 'm', 'e', 'f', 'g', 'p', 'r', 'h', '?'] {
             assert!(arrow(KeyCode::Char(c)).is_none(), "{c} walks");
         }
     }

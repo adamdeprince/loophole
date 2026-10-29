@@ -14,6 +14,7 @@ pub mod costume;
 pub mod discover;
 pub mod doors;
 pub mod folk;
+pub mod give;
 pub mod gravy;
 pub mod hen;
 pub mod items;
@@ -72,7 +73,12 @@ pub struct TickInput {
     pub run: bool,
     /// Knock, take, or (with nothing else to do) patch.
     pub act: bool,
+    /// Eat the best thing in the bag.
     pub eat: bool,
+    /// Eat this, picked from the bag.
+    pub eat_this: Option<Candy>,
+    /// Give this to whoever is in reach.
+    pub give: Option<Candy>,
     pub patch: bool,
     /// Walk to this point (a click or a tap).
     pub goto: Option<Vec2>,
@@ -86,6 +92,8 @@ pub enum SimEvent {
     DoorOpen { b: usize },
     DoorClose { b: usize },
     Given { b: usize, candy: Vec<Candy>, pos: Vec2 },
+    /// The raccoon gave somebody a present.
+    Gift { pos: Vec2 },
     Refused { b: usize, pos: Vec2 },
     Scream { pos: Vec2 },
     LightOut { b: usize },
@@ -369,7 +377,39 @@ pub fn move_body(town: &Town, pos: &mut Vec2, d: Vec2, r: f32, swim: bool) -> bo
         } else if sd.y != 0.0 && town.clear(yo, r, swim) {
             *pos = yo;
         } else {
-            break;
+            // Head on into something round (a trunk, a pole, a cow): slide
+            // along it, the way that keeps going forward.
+            let mut moved = false;
+            let round = town
+                .features_near(*pos, r + 1.0)
+                .filter(|f| f.kind.solid_radius() > 0.0)
+                .min_by(|a, b| a.pos.distance(*pos).total_cmp(&b.pos.distance(*pos)))
+                .map(|f| f.pos);
+            if let Some(c) = round {
+                let n = (*pos - c).normalize_or_zero();
+                // Always round the same way for the same approach, so that
+                // a walker heading straight at a trunk circles it instead
+                // of dithering from side to side.
+                let cross = n.x * sd.y - n.y * sd.x;
+                let t = if cross >= 0.0 { Vec2::new(-n.y, n.x) } else { Vec2::new(n.y, -n.x) };
+                let slide = t * sd.length() + n * 0.01;
+                if town.clear(*pos + slide, r, swim) {
+                    *pos += slide;
+                    continue;
+                }
+            }
+            for deg in [35.0f32, -35.0, 70.0, -70.0, 90.0, -90.0] {
+                let (s, c) = deg.to_radians().sin_cos();
+                let side = Vec2::new(sd.x * c - sd.y * s, sd.x * s + sd.y * c);
+                if town.clear(*pos + side, r, swim) {
+                    *pos += side;
+                    moved = true;
+                    break;
+                }
+            }
+            if !moved {
+                break;
+            }
         }
     }
     blocked

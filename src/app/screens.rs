@@ -6,6 +6,7 @@ use super::{App, Screen};
 use crate::render::FrameModel;
 use crate::render::text::{Anchor, Line, Overlay, Style, width};
 use crate::sim::Game;
+use crate::sim::candy::Candy;
 use crate::sim::discover::Id;
 use crate::sim::raccoon::BELLY_FULL;
 use crate::term::caps::Capabilities;
@@ -42,16 +43,20 @@ fn colour_for(frac: f32) -> &'static str {
 
 fn status_top(g: &Game, found: usize, cols: usize) -> String {
     let r = &g.raccoon;
+    let loki = &g.kids[crate::sim::kids::LOKI];
     let pass = r.passing();
     let left = format!(
-        " {GOLD}LOOPHOLE{RESET}  {DIM}bag{RESET} {CREAM}{}{RESET} {DIM}({} pts){RESET}  {DIM}happy{RESET} {}  {DIM}belly{RESET} {}  {DIM}sheet{RESET} {}{:>3}%{RESET}  {DIM}mend{RESET} {CREAM}{}{RESET}",
+        " {GOLD}LOOPHOLE{RESET}  {DIM}bag{RESET} {CREAM}{}{RESET} {DIM}({} pts){RESET}  {DIM}happy{RESET} {}  {DIM}breath{RESET} {}  {DIM}belly{RESET} {}  {DIM}sheet{RESET} {}{:>3}%{RESET}  {DIM}mend{RESET} {CREAM}{}{RESET}  {DIM}loki{RESET} {CREAM}{}{RESET} {DIM}sugar{RESET} {}",
         r.bag.total(),
         r.bag.value(),
         bar(r.happy, 8, colour_for(r.happy)),
+        bar(r.stamina, 4, if r.winded { RED } else { GREEN }),
         bar(r.belly / BELLY_FULL, 4, AMBER),
         colour_for(pass),
         (pass * 100.0).round() as u32,
         r.mats.total(),
+        loki.pail,
+        bar(loki.sugar, 4, if loki.sugar_rush() { RED } else { PURPLE }),
     );
     let right = format!(
         "{PURPLE}{}{RESET}  {DIM}night {}{RESET}  {DIM}found{RESET} {GOLD}{found}{RESET}{DIM}/{}{RESET} ",
@@ -66,7 +71,8 @@ fn status_top(g: &Game, found: usize, cols: usize) -> String {
 fn hint(g: &Game) -> String {
     let r = &g.raccoon;
     if g.visit.is_some() {
-        return format!("{DIM}walk away to leave{RESET}");
+        let give = crate::sim::give::taker(g).map(|t| format!("{AMBER}G{RESET} {CREAM}give to {}{RESET}  ", crate::sim::give::name(g, t)));
+        return format!("{}{DIM}walk away to leave{RESET}", give.unwrap_or_default());
     }
     if g.gravy.lying() && g.gravy.pos.distance(r.pos) < 1.6 {
         return format!("{AMBER}Space{RESET} {CREAM}rub Gravy's belly{RESET}");
@@ -77,6 +83,10 @@ fn hint(g: &Game) -> String {
     }
     let parts = [
         format!("{AMBER}E{RESET} {DIM}eat{RESET}"),
+        match crate::sim::give::taker(g) {
+            Some(t) => format!("{AMBER}G{RESET} {CREAM}give to {}{RESET}", crate::sim::give::name(g, t)),
+            None => format!("{AMBER}G{RESET} {DIM}give{RESET}"),
+        },
         format!("{AMBER}F{RESET} {DIM}patch{RESET}"),
         format!("{AMBER}Shift{RESET} {DIM}run{RESET}"),
         format!("{AMBER}M{RESET} {DIM}map{RESET}"),
@@ -106,6 +116,10 @@ pub fn decorate(app: &App, m: &mut FrameModel) {
                 Line::new("", Style::Normal),
                 Line::new("A raccoon has worked out that people give free candy", Style::Normal),
                 Line::new("to anybody in a costume. It has found a bedsheet.", Style::Normal),
+                Line::new("", Style::Normal),
+                Line::new("A work of fiction and gentle parody. The shops are made up;", Style::Dim),
+                Line::new("any likeness to a real business or person is coincidence.", Style::Dim),
+                Line::new("Not affiliated with Montpelier or the State of Vermont.", Style::Dim),
                 Line::new("", Style::Normal),
             ];
             for (name, on) in app.caps.summary() {
@@ -143,6 +157,13 @@ pub fn decorate(app: &App, m: &mut FrameModel) {
             m.bottom = format!(" {CREAM}{}{RESET}   {DIM}M or Esc: close the map{RESET}", g.town.describe(g.raccoon.pos));
         }
     }
+    if let (Screen::Pick { give, sel }, Some(g)) = (&app.screen, &app.game) {
+        m.overlays.push(pick_menu(g, *give, *sel));
+        m.bottom = format!(
+            " {AMBER}↑/↓{RESET} {DIM}choose{RESET}   {AMBER}Enter{RESET} {DIM}{}{RESET}   {AMBER}1-9{RESET} {DIM}pick{RESET}   {DIM}any other key: never mind{RESET}",
+            if *give { "give" } else { "eat" }
+        );
+    }
     if let Screen::Paused { menu } = &app.screen {
         let mut lines = vec![Line::new("Paused", Style::Heading), Line::new("", Style::Normal)];
         for (i, item) in PAUSE_MENU.iter().enumerate() {
@@ -152,6 +173,32 @@ pub fn decorate(app: &App, m: &mut FrameModel) {
         o.min_width = 30;
         m.overlays.push(o);
     }
+}
+
+/// What the pick menu offers, best first: everything edible to eat, and
+/// anything at all to give.
+pub fn pick_list(g: &Game, give: bool) -> Vec<(Candy, u64)> {
+    let mut v: Vec<(Candy, u64)> = g.raccoon.bag.kinds().filter(|(c, _)| give || c.edible()).collect();
+    v.sort_by_key(|(c, _)| std::cmp::Reverse(c.value()));
+    v
+}
+
+fn pick_menu(g: &Game, give: bool, sel: usize) -> Overlay {
+    let title = match crate::sim::give::taker(g).filter(|_| give) {
+        Some(t) => format!("Give what to {}?", crate::sim::give::name(g, t)),
+        None if give => "Give what?".to_string(),
+        None => "Eat what?".to_string(),
+    };
+    let mut lines = vec![Line::new(title, Style::Heading), Line::new("", Style::Normal)];
+    for (i, (c, n)) in pick_list(g, give).into_iter().enumerate() {
+        let key = if i < 9 { format!("{}", i + 1) } else { " ".to_string() };
+        let love = if !give && c.loved() { "  ♥" } else { "" };
+        let style = if i == sel { Style::Selected } else { Style::Normal };
+        lines.push(Line::new(format!("{key}  {} ×{n}{love}", c.name()), style));
+    }
+    let mut o = Overlay::new(Anchor::Center, lines);
+    o.min_width = 40;
+    o
 }
 
 fn journal(app: &App, page: usize) -> Overlay {
@@ -182,7 +229,8 @@ fn help() -> Overlay {
         ("Arrows or WASD walk; hold Shift (or press R) to run.", Style::Normal),
         ("Space at a door knocks. Space by a bowl, a pole or a", Style::Normal),
         ("decorated tree takes something. Space by Gravy: belly rub.", Style::Normal),
-        ("E eats the best thing in the bag. F patches the sheet.", Style::Normal),
+        ("E picks something to eat; G something to give whoever is near.", Style::Normal),
+        ("F patches the sheet.", Style::Normal),
         ("Click, tap or touch somewhere to walk there.", Style::Normal),
         ("M (or pinch on a Silkie trackpad) shows the town map.", Style::Normal),
         ("+ and - zoom. J is the journal. P pauses.", Style::Normal),
@@ -192,6 +240,8 @@ fn help() -> Overlay {
         ("the sheet; a torn, muddy, wet or smelly sheet fools nobody.", Style::Dim),
         ("Patch it with whatever you find. Watch where you step.", Style::Dim),
         ("Loki and Skaði think you are a kid. Let them keep thinking so.", Style::Dim),
+        ("Loki snacks as he goes; the more sugar, the more he crashes.", Style::Dim),
+        ("Everybody likes something different. Try hákarl on a stranger.", Style::Dim),
     ];
     let mut o = Overlay::new(Anchor::Center, lines.iter().map(|(t, s)| Line::new(*t, *s)).collect());
     o.min_width = 64;

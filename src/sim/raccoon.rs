@@ -15,9 +15,21 @@ use rand::RngExt;
 
 pub const RADIUS: f32 = 0.3;
 pub const WALK: f32 = 3.4;
-pub const RUN: f32 = 6.0;
+/// Flat out, a raccoon outruns any child, for a few seconds.
+pub const RUN: f32 = 7.6;
+/// Seconds of running a full breath allows.
+pub const WIND: f32 = 5.0;
+/// Seconds to get a full breath back walking (standing still, half that).
+pub const RECOVER: f32 = 9.0;
+/// Out of breath, it walks until it has this much back.
+pub const SECOND_WIND: f32 = 0.35;
 /// A belly holds this much before it will take no more.
 pub const BELLY_FULL: f32 = 12.0;
+/// Every lift in happiness (candy, belly rubs, a kind word) is scaled by
+/// this, so a treat goes further than its table value.
+pub const JOY_GAIN: f32 = 1.3;
+/// Every piece fills the belly by this many times its table value.
+pub const FILL_GAIN: f32 = 2.0;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Act {
@@ -52,6 +64,10 @@ pub struct Raccoon {
     /// Seconds of sugar rush left.
     pub rush: f32,
     pub running: bool,
+    /// Breath for running, 0 to 1.
+    pub stamina: f32,
+    /// Ran itself out: no running until it has its second wind.
+    pub winded: bool,
     pub swimming: bool,
     /// Where a click asked it to go.
     pub path: Vec<Vec2>,
@@ -83,6 +99,8 @@ impl Raccoon {
             happy: 0.8,
             rush: 0.0,
             running: false,
+            stamina: 1.0,
+            winded: false,
             swimming: false,
             path: Vec::new(),
             stride: 0.0,
@@ -92,6 +110,11 @@ impl Raccoon {
             bad_luck: 0,
             cows_seen: Default::default(),
         }
+    }
+
+    /// Happier by `amount` (scaled by JOY_GAIN), up to the top.
+    pub fn cheer(&mut self, amount: f32) {
+        self.happy = (self.happy + amount * JOY_GAIN).min(1.0);
     }
 
     /// The belly's size for the art: 0 (lean) to 4 (round as a pumpkin).
@@ -134,6 +157,13 @@ pub fn step(g: &mut Game, input: &TickInput) {
     if let Some((_, t)) = &mut r.bowl_grab {
         *t += DT;
     }
+    // A present can be handed over at a door too.
+    if let Some(c) = input.give {
+        if matches!(g.raccoon.act, Act::Free | Act::AtDoor) {
+            super::give::give(g, c);
+        }
+    }
+    let r = &mut g.raccoon;
     match r.act {
         Act::Eating { t, candy } => {
             let t = t - DT;
@@ -197,8 +227,8 @@ pub fn step(g: &mut Game, input: &TickInput) {
         }
         Act::Free => {}
     }
-    if input.eat {
-        start_eating(g);
+    if input.eat || input.eat_this.is_some() {
+        start_eating(g, input.eat_this);
         return;
     }
     if input.patch {
@@ -230,7 +260,21 @@ pub fn step(g: &mut Game, input: &TickInput) {
             want = d.normalize();
         }
     }
-    r.running = input.run && want.length_squared() > 0.0;
+    let wants_run = input.run && want.length_squared() > 0.0;
+    r.running = wants_run && !r.winded && r.stamina > 0.0;
+    if r.running {
+        r.stamina = (r.stamina - DT / WIND).max(0.0);
+        if r.stamina <= 0.0 {
+            r.winded = true;
+            r.running = false;
+        }
+    } else {
+        let rate = if want.length_squared() > 0.0 { RECOVER } else { RECOVER / 2.0 };
+        r.stamina = (r.stamina + DT / rate).min(1.0);
+        if r.winded && r.stamina >= SECOND_WIND {
+            r.winded = false;
+        }
+    }
     let terrain = town.grid.at(r.pos);
     r.swimming = terrain == Terrain::Water;
     let speed = r.speed(terrain);
@@ -432,7 +476,8 @@ fn pick_up(g: &mut Game) {
     }
 }
 
-fn start_eating(g: &mut Game) {
+/// Eats `pick`, or the best thing in the bag.
+fn start_eating(g: &mut Game, pick: Option<Candy>) {
     let r = &g.raccoon;
     if r.belly >= BELLY_FULL {
         g.discover(Id::Stuffed);
@@ -440,7 +485,8 @@ fn start_eating(g: &mut Game) {
         g.say_message("Too full to eat another bite. Walk it off.");
         return;
     }
-    let Some(c) = g.raccoon.bag.best() else {
+    let pick = pick.filter(|&c| c.edible() && g.raccoon.bag.get(c) > 0);
+    let Some(c) = pick.or_else(|| g.raccoon.bag.best()) else {
         g.say_message(if g.raccoon.bag.is_empty() { "The bag is empty." } else { "Nothing in the bag a raccoon can eat." });
         return;
     };
@@ -451,8 +497,8 @@ fn start_eating(g: &mut Game) {
 fn finish_eating(g: &mut Game, c: Candy) {
     let pos = g.raccoon.pos;
     let r = &mut g.raccoon;
-    r.belly = (r.belly + c.filling()).min(BELLY_FULL + 2.0);
-    r.happy = (r.happy + c.joy()).min(1.0);
+    r.belly = (r.belly + c.filling() * FILL_GAIN).min(BELLY_FULL + 2.0 * FILL_GAIN);
+    r.cheer(c.joy());
     r.rush = r.rush.max(c.rush());
     if let Some(m) = c.leaves() {
         r.mats.add(m, 1);

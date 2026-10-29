@@ -32,10 +32,12 @@ pub enum Candy {
     Pennies,
     /// Fermented shark, from the children's mother. Other children run.
     Hakarl,
+    /// A cider donut, from an orchard stand: autumn in Vermont, fried.
+    CiderDonut,
 }
 
 impl Candy {
-    pub const ALL: [Candy; 19] = [
+    pub const ALL: [Candy; 20] = [
         Candy::CandyCorn,
         Candy::Lollipop,
         Candy::Chocolate,
@@ -55,6 +57,7 @@ impl Candy {
         Candy::Toothbrush,
         Candy::Pennies,
         Candy::Hakarl,
+        Candy::CiderDonut,
     ];
 
     pub fn name(self) -> &'static str {
@@ -78,6 +81,7 @@ impl Candy {
             Candy::Toothbrush => "a toothbrush",
             Candy::Pennies => "three pennies",
             Candy::Hakarl => "a cube of hákarl (fermented shark)",
+            Candy::CiderDonut => "a cider donut",
         }
     }
 
@@ -86,6 +90,7 @@ impl Candy {
         match self {
             Candy::FullSize | Candy::Hakarl => 50,
             Candy::SyrupJug => 25,
+            Candy::CiderDonut => 12,
             Candy::MapleLeaf | Candy::MapleCotton => 15,
             Candy::Chocolate | Candy::PeanutCup | Candy::Caramel => 10,
             Candy::Lollipop | Candy::GummyWorms | Candy::PopcornBall | Candy::Cheddar => 8,
@@ -101,7 +106,7 @@ impl Candy {
     pub fn filling(self) -> f32 {
         match self {
             Candy::FullSize => 3.0,
-            Candy::SyrupJug | Candy::PopcornBall | Candy::Apple | Candy::MapleCotton | Candy::Hakarl => 1.6,
+            Candy::SyrupJug | Candy::PopcornBall | Candy::Apple | Candy::MapleCotton | Candy::Hakarl | Candy::CiderDonut => 1.6,
             Candy::Raspberry => 0.25,
             Candy::Toothbrush | Candy::Pennies => 0.0,
             _ => 1.0,
@@ -113,7 +118,7 @@ impl Candy {
         match self {
             Candy::SyrupJug => 14.0,
             Candy::FullSize | Candy::MapleCotton => 10.0,
-            Candy::MapleLeaf | Candy::Lollipop | Candy::GummyWorms | Candy::CandyCorn => 6.0,
+            Candy::MapleLeaf | Candy::Lollipop | Candy::GummyWorms | Candy::CandyCorn | Candy::CiderDonut => 6.0,
             Candy::Chocolate | Candy::PeanutCup | Candy::Caramel | Candy::PopcornBall => 5.0,
             Candy::Raspberry => 1.0,
             _ => 0.0,
@@ -128,7 +133,7 @@ impl Candy {
             Candy::FullSize => 0.45,
             Candy::Cheddar => 0.32,
             Candy::SyrupJug => 0.3,
-            Candy::MapleLeaf | Candy::MapleCotton | Candy::PeanutCup => 0.24,
+            Candy::MapleLeaf | Candy::MapleCotton | Candy::PeanutCup | Candy::CiderDonut => 0.24,
             Candy::Chocolate | Candy::Caramel | Candy::PopcornBall => 0.18,
             Candy::Lollipop | Candy::GummyWorms => 0.14,
             Candy::CandyCorn => 0.1,
@@ -155,6 +160,7 @@ impl Candy {
             Candy::Chocolate | Candy::FullSize | Candy::PeanutCup | Candy::Caramel => Some(Mat::Wrapper),
             Candy::Lollipop | Candy::GummyWorms | Candy::MapleCotton => Some(Mat::Wrapper),
             Candy::Raisins | Candy::Carob => Some(Mat::Paper),
+            Candy::CiderDonut => Some(Mat::Napkin),
             _ => None,
         }
     }

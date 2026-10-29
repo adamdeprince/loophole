@@ -237,6 +237,18 @@ pub const LOKI: &[&str] = &[
 
 pub const LOKI_OOPS: &[&str] = &["Oops!", "Sorry!", "Dinosaurs can't stop!"];
 
+pub const LOKI_SUGAR: &[&str] = &["I'M A ROCKET!", "I can run to Canada!", "Is it bedtime? NO!", "Dinosaurs don't need to sit DOWN!"];
+
+pub const LOKI_CRASH: &[&str] = &["WAAAAH! I don't know WHYYY!", "*sob* My legs are sad!", "I want... I want... WAAAH!", "Everything is TOO MUCH!"];
+
+pub const SKADI_CRASH: &[&str] = &["Oh no. Sugar crash. Coming, Loki!", "Loki! It's okay, it's just the candy!", "Here we go. Hang on, Loki!"];
+
+pub const SKADI_ENOUGH: &[&str] = &["Loki. No more candy.", "That's enough sugar for one dinosaur.", "How many have you EATEN?", "Mom is going to have words with me."];
+
+pub const SKADI_BUMPED: &[&str] = &["LOKI!", "Watch where you're going!", "Ow! Loki!", "Hey, that was mine!"];
+
+pub const FOLK_BUMPED: &[&str] = &["Whoa there, little dinosaur!", "Hey!", "Easy, buddy!", "Somebody's had a lot of candy."];
+
 pub const LOKI_CRY: &[&str] = &["WAAAAH!", "My egg!", "*sniff* It broke!"];
 
 pub const SKADI: &[&str] = &[
@@ -261,3 +273,31 @@ pub const SKADI_FAIR: &[&str] = &["Take ONE. It says take one.", "That's not fai
 pub const JOY: &[&str] = &["HÁKARL!!!", "YAY!", "MOM'S HÁKARL!"];
 
 pub const HEN: &[&str] = &["Bawk.", "Bawk?", "BAWK!", "Bok bok.", "Bwaaak."];
+
+/// Robert Frost at the library door, quoting himself: lines from poems
+/// published in 1913 to 1923 (A Boy's Will, North of Boston, Mountain
+/// Interval and New Hampshire), in the public domain in the United States.
+pub const FROST: &[&str] = &[
+    // "Stopping by Woods on a Snowy Evening", 1923.
+    "\"The woods are lovely, dark and deep, / But I have promises to keep, / And miles to go before I sleep.\" And candy to give before I sleep. Here.",
+    // "Nothing Gold Can Stay", 1923.
+    "\"Nature's first green is gold, / Her hardest hue to hold.\" Candy's the same. Eat it while it lasts.",
+    // "The Road Not Taken", 1916.
+    "\"Two roads diverged in a yellow wood, / And sorry I could not travel both...\" Take two pieces, then. It's Halloween.",
+    // "Mending Wall", 1914.
+    "\"Something there is that doesn't love a wall.\" Or a closed door. Here you are, ghost.",
+    // "Mending Wall", 1914.
+    "\"Good fences make good neighbors.\" Good candy makes better ones. Take one.",
+    // "October", 1913.
+    "\"O hushed October morning mild, / Thy leaves have ripened to the fall.\" Evening, too. And a bookmark.",
+];
+
+/// Calvin Coolidge (1872 to 1933), of Plymouth Notch, thirtieth President:
+/// "Silent Cal". He hands it over and that is all.
+pub const COOLIDGE: &[&str] = &["...", "*nods*", ".", "*hands it over*", "Mm."];
+
+/// A grown-up offered hákarl.
+pub const ADULT_HAKARL: &[&str] = &["Oh my GOD, what is that smell?", "No. No thank you. NO.", "Is that... fish? Why is it fish?", "I have to go. I have to go right now."];
+
+/// A householder offered hákarl on their own doorstep.
+pub const DOOR_HAKARL: &[&str] = &["AAAGH! What IS that?!", "Nope! Nope nope nope!", "Honey! Close the windows!", "I'm calling... somebody! Anybody!"];

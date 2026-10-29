@@ -124,7 +124,7 @@ impl Show {
 
     pub fn on_event(&mut self, e: &SimEvent) {
         match e {
-            SimEvent::Given { pos, .. } => self.burst("sparkle", *pos - Vec2::new(0.0, 0.8), 6, 2.0, 0.7),
+            SimEvent::Given { pos, .. } | SimEvent::Gift { pos } => self.burst("sparkle", *pos - Vec2::new(0.0, 0.8), 6, 2.0, 0.7),
             SimEvent::Loved { pos } => {
                 self.burst("heart", *pos - Vec2::new(0.0, 1.2), 4, 1.5, 1.0);
                 self.burst("star", *pos - Vec2::new(0.0, 1.0), 4, 2.5, 0.8);
@@ -223,6 +223,8 @@ impl Show {
                 KidState::Jump { .. } => ("jump".to_string(), tick / 2),
                 KidState::LeafDive { t, .. } if t > 0.0 => ("sprawl".to_string(), 0),
                 KidState::Sulk { .. } => ("sit".to_string(), 0),
+                // Hurrying, they skip.
+                _ if k.vel.length() > 4.2 => (format!("skip_{}", dir_name(k.facing)), (k.stride * 1.6) as usize),
                 _ if moving => (format!("walk_{}", dir_name(k.facing)), step),
                 _ => (format!("stand_{}", dir_name(k.facing)), 0),
             };
@@ -311,10 +313,15 @@ impl Show {
                 0,
             );
         }
-        // Whoever answers a door.
+        // Whoever answers a door: Robert Frost at the library, reciting, and
+        // Calvin Coolidge at the State House, not.
         if let Some(b) = visiting {
             let bd = &town.buildings[b];
-            if !matches!(bd.kind, BuildingKind::Home | BuildingKind::Tower) {
+            if bd.kind == BuildingKind::Library {
+                put(K_DOOR, SheetId::Frost, "recite".into(), tick / 12, bd.door.at + bd.door.facing.vec() * 0.3, Layer::Body, 0);
+            } else if bd.kind == BuildingKind::StateHouse {
+                put(K_DOOR, SheetId::Coolidge, "offer".into(), 0, bd.door.at + bd.door.facing.vec() * 0.3, Layer::Body, 0);
+            } else if !matches!(bd.kind, BuildingKind::Home | BuildingKind::Tower) {
                 let look = people::ADULTS.start + (bd.seed % people::ADULTS.len() as u64) as usize;
                 put(K_DOOR, SheetId::Folk(look as u8), "walk_down".into(), 1, bd.door.at + Vec2::new(0.0, 0.1), Layer::Body, 0);
             }

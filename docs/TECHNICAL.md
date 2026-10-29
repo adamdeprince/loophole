@@ -7,9 +7,11 @@ drawn and scrolled, and how each kitty and Silkie protocol is used.
 The terminal layer (capability discovery, input decoding, kitty graphics
 and OSC 777 encoding, terminal lifecycle), the frame pacer, the text
 overlays, the vector scene model, the lettering and the hen and effects
-art come from [Silkie Sprint](../../silkie-sprint/docs/TECHNICAL.md) and
-[Silkie Scramble](../../silkie-scramble/docs/TECHNICAL.md) and work as
-described there. OSC 777 frames are encoded at any length: the framing
+art come from
+[Silkie Sprint](https://github.com/adamdeprince/sprint/blob/main/docs/TECHNICAL.md)
+and
+[Silkie Scramble](https://github.com/adamdeprince/scramble/blob/main/docs/TECHNICAL.md)
+and work as described there. OSC 777 frames are encoded at any length: the framing
 gives the fields no limit of their own (a terminal's `escape_limit` may
 bound a whole sequence). This document covers what is new.
 
@@ -19,7 +21,7 @@ bound a whole sequence). This document covers what is new.
 |---|---|
 | `world` | the town file (`town`), laying out the town from it (`plan`: the terrain grid, houses with addresses along the streets, yards, woods, streetlights, a feature index), and finding the way (`nav`: distance fields, A*, line of sight) |
 | `sim` | the deterministic night: the raccoon, its costume, candy, doors and who answers them, Loki and Skaði, the hen, Gravy, the black cat, the townsfolk, things on the ground, discoveries, the autopilot |
-| `art` | procedural painting of every sprite sheet, as pixels or as vector elements: the raccoon in its sheet, the bag, Loki, Skaði, their mother and Ethan Allen (by hand), townsfolk (procedural), animals, small things, effects |
+| `art` | procedural painting of every sprite sheet, as pixels or as vector elements: the raccoon in its sheet, the bag, Loki, Skaði, their mother, Ethan Allen, Robert Frost and Calvin Coolidge (by hand), townsfolk (procedural), animals, small things, effects |
 | `gfx` | the vector scene model, the town's scenery (`scenery`), the town map (`minimap`), lettering |
 | `render` | layout and camera, the chunked renderer, text, uploads, snapshots |
 | `term` | capability discovery, input, kitty graphics and OSC 777 encoding, terminal lifecycle |
@@ -57,7 +59,7 @@ and 60 raspberry patches; the tests check that every door can be reached
 from the start and no buildings overlap.
 
 `Town::describe` turns a point into the location line ("on Main Street,
-outside Bare Paws Books", "in the yard of 14 Elm Street", "swimming in the
+outside Dog-Eared Books", "in the yard of 14 Elm Street", "swimming in the
 Winooski River").
 
 ## The night
@@ -78,13 +80,15 @@ waypoint by waypoint).
 (running 0.0075, swimming 0.011); candy given at a door adds 0.04, a
 friendly word 0.02, a belly rub 0.12, and eating adds the candy's *joy*
 (raisins 0.02, chocolate 0.18, cheddar 0.32, a full-size bar 0.45, hákarl
-everything). Speed is `pace × (0.4 + 0.6 × happiness)`, times a sugar rush,
-times 0.85 when stuffed, times `1 / (1 + bag/600)` for a heavy bag, times the
-terrain (woods 0.78, water 0.45). Slipping in poop or barf costs 0.15.
+everything); every gain is then scaled by `JOY_GAIN` (1.3). Speed is
+`pace × (0.4 + 0.6 × happiness)`, times a sugar rush, times 0.85 when
+stuffed, times `1 / (1 + bag/600)` for a heavy bag, times the terrain
+(woods 0.78, water 0.45). Slipping in poop or barf costs 0.15.
 
-**The belly** fills with what is eaten (up to 12; a raccoon will not eat
-past that) and empties by one every 22 seconds. Its level (0 to 4) is in
-the art: the sheet bulges and the hem rides up.
+**The belly** fills with what is eaten, twice each food's *filling*
+(`FILL_GAIN`; up to 12, and a raccoon will not eat past that) and empties
+by one every 22 seconds. Its level (0 to 4) is in the art: the sheet
+bulges and the hem rides up.
 
 **The costume** is twelve places on the sheet (four columns by three rows,
 the last the hem: a sheet is a fixed piece of cloth). Each builds up strain;
@@ -109,7 +113,9 @@ belly) is its *look*; the art is repainted only when the look changes.
 Every building that answers has a household: a persona (generous, normal,
 suspicious, nearsighted, grumpy, the dentist, the full-size bar family,
 maple people, cheese people; keepers for shops and public buildings; the
-children's mother; Ethan Allen), a stock of candy and a restocking rate.
+children's mother; Ethan Allen; Robert Frost at the library, threshold
+0.2, who quotes his poems of 1913 to 1923; Calvin Coolidge at the State
+House, threshold 0.3, who says next to nothing), a stock of candy and a restocking rate.
 Stock and rate depend on the persona and differ by up to 30% between
 households, so every porch light comes back on at its own pace. A porch
 light is on while there is at least one piece to give.
@@ -136,25 +142,97 @@ same bowl. Rival trick-or-treaters take from bowls too.
 
 ### Loki and Skaði
 
-Each decides every half second or so when idle. Skaði, in order: her
-brother crying (she drops whatever she holds and runs); candy the raccoon
-dropped (she brings it back); a torn sheet and a scrap nearby (she patches
-it); the hen in the road (she carries her to the nearest sidewalk or
-lawn); now and then a cuddle with the hen; otherwise she walks beside the
-raccoon. Loki: an egg within 16 tiles (he takes it home, at a run, by
-path); otherwise at random a dash past or through the raccoon, a leaf pile,
-the hen, something on the ground (eaten, given to the raccoon, or put down
-somewhere else), the raccoon's tail, a wander, or following.
+Nothing ties the children to the raccoon: they decide where to go. Both
+walk by A* on the pedestrian cost (a road tile costs 8 against a
+sidewalk's 1, so they go round by the sidewalk unless that is a long way
+round) and stop for 0.7 s at the curb before they cross. Far behind, they
+run (6 to 7 tiles/s, slower than a raccoon flat out but not one that is out
+of breath) and skip as they go. Somebody wedged for 1.2 s without getting
+0.8 tiles further squeezes past whatever is in the way; children more than
+40 tiles from the raccoon for 15 s turn up again just out of sight behind
+it.
 
-Contacts: Loki faster than 3.6 tiles/s spills 10% of the bag (at least one
-piece); touching Loki while he carries an egg breaks it (he cries for nine
-seconds, Skaði comes and hugs him); Skaði faster than 3.6 knocks the raccoon
-down and spills 25% (at least two). Both children holding the hen at once
-is a tug of war (2.4 s; Skaði wins three times in five).
+Skaði decides every half second, in order: her brother crying (she drops
+whatever she holds and runs to hug him); his egg run home (she goes too);
+candy the raccoon dropped (she brings it back); a torn sheet and a scrap
+nearby (she patches it); the hen in the road (to the nearest sidewalk or
+lawn); then the door the raccoon is making for. That is the door it is
+visiting, else the end of its click-to-walk path, else a door within 1.6
+tiles, else the best lit door ahead within 14 tiles (alignment at least
+0.55, doors already visited counting against). She heads for it, running if
+the raccoon is closer to it than she is. If the raccoon turns out to be
+going elsewhere she stops for a moment ("Huh? Oh, that one!") and goes to
+the new door. Otherwise she walks beside the raccoon.
+
+Loki decides every 0.6 to 1.6 s (shorter with sugar): eggs in his pail go
+home when home is within 32 tiles; Skaði's door is his door, at a run;
+otherwise an egg within 10 tiles, or at random a dash (past or through the
+raccoon, or, with sugar, through whoever is nearest), a leaf pile, the hen,
+something on the ground (eaten, given to the raccoon, or put down
+somewhere else), the raccoon's tail, a wander, or following his sister.
+
+**Sugar.** Loki's blood sugar runs from 0 to 1. Each piece he eats adds
+0.12 (hákarl adds nothing); 0.0033 wears off a second. He takes a piece
+from his pail every 22 to 45 s, oftener the fuller it is (divided by 1 +
+pail/20), unless Skaði is within 8 tiles and he is over 0.85; when he finds
+candy he eats it on the spot. At 0.65 he is on a rush. The sugar raises his
+run speed (6 + sugar tiles/s), his chance of dashing (+0.3 × sugar) and of
+dashing at somebody, and his chance of not swerving (0.3 + 0.7 × sugar).
+At 1 he crashes: he stops and cries for nine seconds, his sugar drops to
+0.1 and Skaði comes running to hug him.
+
+Contacts: Loki faster than 3.6 tiles/s spills 10% of the raccoon's bag (at
+least one piece). Running into Skaði, a townsperson (not a dog) or the hen,
+he knocks a piece of candy loose (the hen, having none, drops an egg if she
+is full and something worse if she is not). After any of these he runs a
+loop round the spot (radius 2.6 + 5 × sugar tiles, for 2.2 to 3.4 + 5 ×
+sugar seconds, wobbling with sugar) and comes back for the candy.
+Touching Loki while he carries an egg breaks it (he cries for nine seconds,
+Skaði comes and hugs him); Skaði faster than 3.6 knocks the raccoon down
+and spills 25% (at least two). Both children holding the hen at once is a
+tug of war (2.4 s; Skaði wins three times in five).
 
 Their mother gives them hákarl when they come home (they jump up and down),
 and Ethan Allen gives them a paper tricorn (Loki) and a key to Fort
 Ticonderoga (Skaði), which they wear from then on.
+
+### Eating and giving
+
+E and G open a menu of the bag (E: what can be eaten; G: everything),
+best first; the sim waits while it is open. The pick goes to the sim as
+`TickInput::eat_this` or `TickInput::give`. Giving goes to whoever
+answered the door the raccoon is at, else the nearest of Loki, Skaði,
+the townsfolk (not the dogs), Gravy, the hen and the cat within 1.8
+tiles (`sim::give::taker`). Hákarl that is refused goes back in the bag.
+
+| Food | Loki (sugar) | Skaði | Hen (devotion s) | Gravy | Cat |
+|---|---|---|---|---|---|
+| full-size bar | +0.40 | bribed 180 s | refuses | refuses | — |
+| syrup jug | +0.35 | bribed 60 s | refuses | eats, barfs | — |
+| maple cotton | +0.25 | bribed 60 s | 25 | eats, barfs | — |
+| chocolate | +0.20 | bribed 60 s | refuses | refuses | — |
+| cider donut | +0.20 | bribed 60 s | 30 | eats, barfs | — |
+| peanut cup | +0.18 | bribed 60 s | refuses | refuses | — |
+| caramel | +0.16, teeth stuck 5 s | bribed 60 s | refuses | refuses | — |
+| maple leaf | +0.16 | bribed 60 s | 25 | eats, barfs | — |
+| gummy worms | +0.15, shows the hen | saves it | 45 | eats, barfs | — |
+| candy corn | +0.12 | saves it | 50 | eats, barfs | — |
+| lollipop | +0.12, content 25 s | saves it | refuses | refuses | — |
+| popcorn ball | +0.08 | saves it | 40 | eats, barfs | — |
+| raspberry | +0.03 | saves it | 30 | eats, barfs | — |
+| cheddar | −0.25 (calms) | saves it | 30 | rolls over, moves | eats, no crossing 3 min |
+| apple, raisins, carob | "not candy" | saves it | 30 | apple, carob: barfs; raisins: refuses | — |
+| hákarl | jumps for joy | jumps for joy | 40 | not hungry, moves | eats, no crossing 3 min |
+
+A fed hen follows the raccoon at 4.6 tiles/s, now and then pecks a piece
+out of the bag, and lays within 6 to 16 s. Loki takes every egg home at a
+run, on his own, and is not counted as lost until he has had time to get
+back (distance / speed + 8 s). Townsfolk given a present make the doors
+within 16 tiles less wary (0.15, a full-size bar 0.3). A householder given
+a present gives two back, once a night. Offered hákarl, townsfolk flee
+and drop candy; householders (but not Mom, Ethan Allen or Coolidge) flee
+and tip the whole bowl onto the step, what they would have given, and the
+porch light goes out.
 
 ### Gullinkombi
 

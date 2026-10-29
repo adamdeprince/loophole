@@ -48,7 +48,7 @@ pub struct Gravy {
 
 impl Gravy {
     pub fn new(town: &Town) -> Gravy {
-        let at = open_near(town, HOME);
+        let at = town.open_near(HOME, RADIUS, false, 20.0).unwrap_or(town.start);
         Gravy {
             pos: at,
             prev: at,
@@ -183,20 +183,6 @@ pub fn step(g: &mut Game) {
     blocking(g);
 }
 
-/// The nearest spot to `p` with room for a dog his size.
-fn open_near(town: &Town, p: Vec2) -> Vec2 {
-    for r in 0..40 {
-        for k in 0..16 {
-            let a = k as f32 / 16.0 * std::f32::consts::TAU;
-            let q = p + Vec2::new(a.cos(), a.sin()) * r as f32 * 0.5;
-            if town.clear(q, RADIUS, false) {
-                return q;
-            }
-        }
-    }
-    town.start
-}
-
 fn walk(g: &mut Game, to: Vec2, speed: f32) -> f32 {
     let town = g.town.clone();
     let d = &mut g.gravy;
@@ -240,7 +226,7 @@ pub fn rub(g: &mut Game) -> bool {
         return false;
     }
     g.gravy.state = State::Rubbed { t: 2.6 };
-    g.raccoon.happy = (g.raccoon.happy + 0.12).min(1.0);
+    g.raccoon.cheer(0.12);
     g.say(Who::Gravy, "*thump thump thump*");
     g.events.push(SimEvent::Hug { pos: g.gravy.pos });
     g.discover(Id::BellyRub);

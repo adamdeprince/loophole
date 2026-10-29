@@ -67,7 +67,7 @@ Kinds: `woods` (trees and undergrowth are planted in it), `lawn`, `green`
 ### Buildings
 
 ```
-building shop "Bare Paws Books" 123 100 8.6 7 door=E say="..." gives=bookmark
+building shop "Dog-Eared Books" 123 100 8.6 7 door=E say="..." gives=bookmark
 home "Loki and Skaði's house" 138.8 68.6 6 5 door=W say="..." gives=hakarl
 ```
 

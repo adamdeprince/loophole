@@ -53,6 +53,9 @@ pub enum Screen {
     Title,
     Play,
     Paused { menu: usize },
+    /// Picking something out of the bag, to eat or (`give`) to hand to
+    /// whoever is in reach. The night waits.
+    Pick { give: bool, sel: usize },
     Journal { back: Box<Screen>, page: usize },
     Help,
     Report,

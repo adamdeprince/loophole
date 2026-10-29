@@ -71,6 +71,8 @@ pub enum SheetId {
     Skadi,
     Mom,
     Ethan,
+    Frost,
+    Coolidge,
     Hen,
     Gravy,
     Pets,
@@ -82,13 +84,15 @@ pub enum SheetId {
 
 impl SheetId {
     /// Every sheet but the townsfolk's (see [`SheetId::all`]).
-    pub const ALL: [SheetId; 11] = [
+    pub const ALL: [SheetId; 13] = [
         SheetId::Raccoon,
         SheetId::Bag,
         SheetId::Loki,
         SheetId::Skadi,
         SheetId::Mom,
         SheetId::Ethan,
+        SheetId::Frost,
+        SheetId::Coolidge,
         SheetId::Hen,
         SheetId::Gravy,
         SheetId::Pets,
@@ -116,6 +120,8 @@ impl SheetId {
             SheetId::Pets => 8,
             SheetId::Stuff => 9,
             SheetId::Fx => 10,
+            SheetId::Frost => 11,
+            SheetId::Coolidge => 12,
             SheetId::Folk(i) => 100 + i as u32,
         };
         IMG_BASE + 1 + n
@@ -146,6 +152,8 @@ pub fn paint_sheet(id: SheetId, tile_px: u32, look: &Look, vector: bool) -> Pain
         SheetId::Skadi => crate::art::family::skadi_sheet(res, vector),
         SheetId::Mom => crate::art::family::mom_sheet(res, vector),
         SheetId::Ethan => crate::art::family::ethan_sheet(res, vector),
+        SheetId::Frost => crate::art::family::frost_sheet(res, vector),
+        SheetId::Coolidge => crate::art::family::coolidge_sheet(res, vector),
         SheetId::Hen => crate::art::hen::sheet(res, vector),
         SheetId::Gravy => crate::art::animals::gravy_sheet(res, vector),
         SheetId::Pets => crate::art::animals::pets_sheet(res, vector),

@@ -35,6 +35,10 @@ pub enum Persona {
     Keeper,
     /// Ethan Allen, on top of the Hubbard Park tower. Do not ask.
     Ethan,
+    /// Robert Frost, in the library door, with a book and a verse.
+    Frost,
+    /// Calvin Coolidge, in the State House door, saying nothing.
+    Coolidge,
     /// Nobody answers (an office after hours, the tower).
     Nobody,
 }
@@ -54,6 +58,9 @@ impl Persona {
             Persona::Mom => 0.0,
             Persona::Keeper => 0.36,
             Persona::Ethan => 0.0,
+            // A poet sees the child under the sheet.
+            Persona::Frost => 0.2,
+            Persona::Coolidge => 0.3,
             Persona::Nobody => 2.0,
         }
     }
@@ -74,6 +81,8 @@ impl Persona {
             Persona::Mom => (80.0, 4.0),
             Persona::Keeper => (60.0, 2.2),
             Persona::Ethan => (6.0, 0.4),
+            Persona::Frost => (40.0, 1.5),
+            Persona::Coolidge => (30.0, 1.0),
             Persona::Nobody => (0.0, 0.0),
         }
     }
@@ -95,10 +104,13 @@ pub struct House {
     pub wary: f32,
     /// Somebody tried a moment ago: the door does not open again at once.
     pub cooldown: f32,
+    /// The raccoon has given them a present tonight.
+    pub touched: bool,
 }
 
 impl House {
     pub fn new_night(&mut self) {
+        self.touched = false;
         self.supply = self.max;
         self.light = self.max >= 1.0;
         self.last_seen = None;
@@ -130,6 +142,8 @@ pub fn houses(town: &Town, rng: &mut ChaCha8Rng) -> Vec<House> {
                 BuildingKind::Home => Persona::Mom,
                 BuildingKind::Office => Persona::Nobody,
                 BuildingKind::Tower => Persona::Ethan,
+                BuildingKind::Library => Persona::Frost,
+                BuildingKind::StateHouse => Persona::Coolidge,
                 _ => Persona::Keeper,
             };
             let (max, per_minute) = persona.stock();
@@ -145,6 +159,7 @@ pub fn houses(town: &Town, rng: &mut ChaCha8Rng) -> Vec<House> {
                 visits: 0,
                 wary: 0.0,
                 cooldown: 0.0,
+                touched: false,
             }
         })
         .collect()
@@ -192,8 +207,9 @@ pub fn random_treat(rng: &mut ChaCha8Rng) -> Candy {
         61..=68 => Candy::Caramel,
         69..=80 => Candy::MapleLeaf,
         81..=85 => Candy::MapleCotton,
-        86..=89 => Candy::SyrupJug,
-        90..=94 => Candy::PopcornBall,
+        86..=88 => Candy::SyrupJug,
+        89..=91 => Candy::PopcornBall,
+        92..=94 => Candy::CiderDonut,
         _ => Candy::Cheddar,
     }
 }
@@ -278,6 +294,7 @@ pub fn step(g: &mut Game) {
             g.events.push(SimEvent::DoorOpen { b });
             let greet = match h.persona {
                 Persona::Mom => lines::pick(&mut g.rng, lines::MOM),
+                Persona::Coolidge => lines::pick(&mut g.rng, lines::COOLIDGE),
                 _ => lines::pick(&mut g.rng, lines::GREET),
             };
             g.say(who, greet);
@@ -452,6 +469,17 @@ fn judge(g: &mut Game, b: usize) -> Verdict {
             mats.push(Mat::Sprig);
             bd.say.clone().unwrap_or_else(|| "Huzzah!".into())
         }
+        Persona::Frost => {
+            mats.push(Mat::Bookmark);
+            candy.push(random_treat(rng));
+            lines::pick(rng, lines::FROST).into()
+        }
+        Persona::Coolidge => {
+            // Maple, and cheddar: his father started the cheese factory in
+            // Plymouth Notch.
+            candy.extend([Candy::MapleLeaf, Candy::Cheddar]);
+            lines::pick(rng, lines::COOLIDGE).into()
+        }
         Persona::Mom => {
             candy.push(Candy::Hakarl);
             candy.push(Candy::Hakarl);
@@ -484,7 +512,9 @@ fn judge(g: &mut Game, b: usize) -> Verdict {
         }
         Persona::Nobody => String::new(),
     };
-    let line = if h.visits > 0 && !again && h.last_seen.is_some() && g.rng.random_bool(0.5) {
+    // Frost keeps to his verse and Coolidge to his silence.
+    let chatty = !matches!(h.persona, Persona::Frost | Persona::Coolidge);
+    let line = if chatty && h.visits > 0 && !again && h.last_seen.is_some() && g.rng.random_bool(0.5) {
         lines::pick(&mut g.rng, lines::NEW_GHOST).to_string()
     } else {
         line
@@ -499,7 +529,24 @@ fn deliver(g: &mut Game, b: usize, v: &Verdict) {
     let pos = bd.door.step();
     match v {
         Verdict::Give { candy, mats, line } => {
-            g.say(who, line.clone());
+            // With the children along, what was for one is shared out: one
+            // each. Shake them off and the raccoon gets it all.
+            let along = kids_along(g, pos);
+            let kids = along.iter().filter(|&&k| k).count();
+            let mut candy = candy.clone();
+            let share = kids.min(candy.len().saturating_sub(1));
+            if share > 0 && g.houses[b].persona != Persona::Ethan {
+                candy.truncate(candy.len() - share);
+                // Coolidge shares it out too, but he does not say so.
+                if g.houses[b].persona == Persona::Coolidge {
+                    g.say(who, line.clone());
+                } else {
+                    g.say(who, format!("{line} One each!"));
+                }
+            } else {
+                g.say(who, line.clone());
+            }
+            let candy = &candy;
             for c in candy {
                 g.raccoon.bag.add(*c, 1);
             }
@@ -508,7 +555,7 @@ fn deliver(g: &mut Game, b: usize, v: &Verdict) {
             }
             let given = candy.len() as f32;
             g.houses[b].supply = (g.houses[b].supply - given.max(1.0)).max(0.0);
-            g.raccoon.happy = (g.raccoon.happy + 0.04).min(1.0);
+            g.raccoon.cheer(0.04);
             g.events.push(SimEvent::Given { b, candy: candy.clone(), pos });
             g.discover(Id::FirstCandy);
             if candy.contains(&Candy::FullSize) {
@@ -545,6 +592,15 @@ fn deliver(g: &mut Game, b: usize, v: &Verdict) {
                 ethan_gifts(g, along);
                 return;
             }
+            if g.houses[b].persona == Persona::Coolidge {
+                coolidge(g, b, along);
+            }
+            if g.houses[b].persona == Persona::Frost && along[1] && g.rng.random_bool(0.5) {
+                g.say(Who::Skadi, "Wait. Was that ROBERT FROST?");
+                if along[0] {
+                    g.say(Who::Loki, "Who?");
+                }
+            }
             for (i, here) in along.into_iter().enumerate() {
                 if here {
                     let c = if g.houses[b].persona == Persona::Mom { Candy::Hakarl } else { random_treat(&mut g.rng) };
@@ -566,6 +622,23 @@ fn deliver(g: &mut Game, b: usize, v: &Verdict) {
             }
         }
         Verdict::Empty { line } | Verdict::Nobody { line } => g.say(who, line.clone()),
+    }
+}
+
+/// Calvin Coolidge says nothing; the plaque by the door says the rest. Skaði
+/// bets she can get more than two words out of him.
+fn coolidge(g: &mut Game, b: usize, along: [bool; 2]) {
+    if let Some(plaque) = g.town.buildings[b].say.clone() {
+        g.say_message(plaque);
+    }
+    g.discover(Id::SilentCal);
+    if along[1] && g.rng.random_bool(0.5) {
+        let who = Who::Door(b as u32);
+        g.say(Who::Skadi, "Mr. President! I bet I can get more than two words out of you.");
+        g.say(who, "You lose.");
+        if along[0] {
+            g.say(Who::Loki, "He talked! He TALKED!");
+        }
     }
 }
 
@@ -593,14 +666,30 @@ fn ethan_gifts(g: &mut Game, along: [bool; 2]) {
     }
 }
 
+/// A piece out of a household's bowl: what they would have handed out.
+pub fn bowl_piece(persona: Persona, gives: Option<&str>, rng: &mut ChaCha8Rng) -> Candy {
+    match (persona, gives) {
+        (Persona::FullSize, _) => Candy::FullSize,
+        (Persona::Maple, _) | (_, Some("maple")) => [Candy::MapleLeaf, Candy::SyrupJug, Candy::MapleCotton][rng.random_range(0..3)],
+        (Persona::Cheese, _) => Candy::Cheddar,
+        (Persona::Dentist, _) => Candy::Toothbrush,
+        (Persona::Grumpy, _) => [Candy::Raisins, Candy::Pennies, Candy::Apple][rng.random_range(0..3)],
+        (_, Some("chocolate")) => Candy::Chocolate,
+        (_, Some("popcorn")) => Candy::PopcornBall,
+        (_, Some("carob")) => Candy::Carob,
+        _ => random_treat(rng),
+    }
+}
+
 /// Word goes round that there is a raccoon about: doors near `at` get
-/// warier for a while.
+/// warier for a while (or, for a negative `amount`, that there is a ghost
+/// giving candy away: less wary).
 pub fn alarm(g: &mut Game, at: Vec2, amount: f32) {
     let town = g.town.clone();
     for (h, b) in g.houses.iter_mut().zip(town.buildings.iter()) {
         let d = b.door.step().distance(at);
         if d < 16.0 {
-            h.wary = (h.wary + amount * (1.0 - d / 16.0)).min(0.45);
+            h.wary = (h.wary + amount * (1.0 - d / 16.0)).clamp(0.0, 0.45);
         }
     }
 }

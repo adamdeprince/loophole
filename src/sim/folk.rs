@@ -43,6 +43,23 @@ impl Kind {
     pub fn is_child(self) -> bool {
         matches!(self, Kind::Kid)
     }
+
+    /// What to call one on the give menu.
+    pub fn label(self) -> &'static str {
+        match self {
+            Kind::Parent => "a parent",
+            Kind::Kid => "a trick-or-treater",
+            Kind::Teen => "a teenager",
+            Kind::DogWalker => "a dog walker",
+            Kind::Dog => "a dog",
+            Kind::Jogger => "a jogger",
+            Kind::Tourist => "a leaf peeper",
+            Kind::Professor => "a professor",
+            Kind::Legislator => "a legislator",
+            Kind::Farmer => "a farmer",
+            Kind::Neighbour => "a neighbour",
+        }
+    }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
@@ -430,7 +447,7 @@ fn notice(g: &mut Game, i: usize) {
             Temper::Friendly => {
                 let line = lines::pick(&mut g.rng, lines::FOLK_FRIENDLY);
                 g.say(me, line);
-                g.raccoon.happy = (g.raccoon.happy + 0.02).min(1.0);
+                g.raccoon.cheer(0.02);
             }
             Temper::Suspicious => {
                 if passing < 0.62 {
@@ -463,7 +480,7 @@ fn notice(g: &mut Game, i: usize) {
 }
 
 /// A frightened child drops some of their candy as they run.
-fn spill_pail(g: &mut Game, i: usize, from: Vec2) {
+pub fn spill_pail(g: &mut Game, i: usize, from: Vec2) {
     let n = g.rng.random_range(1..4).min(g.folk[i].pail.max(1) as u32 + 1);
     let pos = g.folk[i].pos;
     let away = (pos - from).normalize_or_zero();
