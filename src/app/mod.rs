@@ -522,7 +522,12 @@ impl App {
             }
             Msg::InputClosed => self.quit = true,
             Msg::Signal(s) => match s {
-                libc::SIGWINCH => self.pending_resize = Some(Instant::now()),
+                libc::SIGWINCH => {
+                    // Remote consoles may report only rows and columns through
+                    // TIOCGWINSZ. Font changes also change pixel placements.
+                    self.tty.write(b"\x1b[16t")?;
+                    self.pending_resize = Some(Instant::now());
+                }
                 libc::SIGINT | libc::SIGTERM | libc::SIGHUP => self.quit = true,
                 libc::SIGTSTP => self.suspend()?,
                 _ => {}
