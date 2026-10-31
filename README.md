@@ -143,7 +143,7 @@ maple farmers, and the neighbours, friendly or suspicious or oblivious.
 **The town** is Montpelier, from the State House to the college, between the
 hills on both sides of Main Street down to the Winooski River: the gold
 dome, the Kellogg-Hubbard Library, City Hall and the fire station, the
-churches, the North Branch and the Langdon Street footbridge, the bike
+Chapel of the Lost Mitten, the North Branch and the Langdon Street footbridge, the bike
 path, the co-op on Stone Cutters Way, painted cows, flags (and a few Green
 Mountain Boys flags) on State Street, and a Main Street of made-up shops
 (Dog-Eared Books, the Hop Loft, Pie in the Sky, the Lantern Light Cinema,
@@ -154,11 +154,11 @@ the stone lookout tower. Somebody is up there.
 ![The trail up through Hubbard Park to the lookout tower](docs/images/hubbard-park.png)
 
 *Silkie Loophole is a work of fiction and gentle parody. The shops,
-restaurants and hotels in it are invented, with invented names; none of
-them stands for a real business, and nothing here is meant to say anything
-about any real business or person. Public places (the State House, the
-library, City Hall, the fire station, the churches, the college) appear as
-themselves, affectionately. The game is not affiliated with or endorsed by
+restaurants, hotels and churches in it are invented, with invented names;
+none of them stands for a real business or congregation, and nothing here
+is meant to say anything about any real business, congregation or person.
+Public places (the State House, the library, City Hall, the fire station,
+the college) appear as themselves, affectionately. The game is not affiliated with or endorsed by
 the City of Montpelier, the State of Vermont or anybody else in it.*
 
 The evening runs from half past five to half past nine. Then it is

@@ -38,10 +38,10 @@ other game.
 
 `src/gfx/scenery.rs` and `src/gfx/minimap.rs` draw the town from the town
 file: original. The town is Montpelier, Vermont, drawn from memory and
-simplified. Public places keep their own names; shops, restaurants and
-hotels are invented, with names chosen to be well away from any real
-business's, and their jokes are not about real businesses or people. The
-game is a work of fiction and gentle parody, and says so on its title
+simplified. Public places keep their own names; shops, restaurants, hotels
+and churches are invented, with names chosen to be well away from any real
+business's or congregation's, and their jokes are not about real businesses,
+congregations or people. The game is a work of fiction and gentle parody, and says so on its title
 screen.
 
 ## Typeface

@@ -117,9 +117,9 @@ pub fn decorate(app: &App, m: &mut FrameModel) {
                 Line::new("A raccoon has worked out that people give free candy", Style::Normal),
                 Line::new("to anybody in a costume. It has found a bedsheet.", Style::Normal),
                 Line::new("", Style::Normal),
-                Line::new("A work of fiction and gentle parody. The shops are made up;", Style::Dim),
-                Line::new("any likeness to a real business or person is coincidence.", Style::Dim),
-                Line::new("Not affiliated with Montpelier or the State of Vermont.", Style::Dim),
+                Line::new("A work of fiction and gentle parody. The shops and churches", Style::Dim),
+                Line::new("are made up; any likeness to a real one or a real person", Style::Dim),
+                Line::new("is coincidence. Not affiliated with Montpelier or Vermont.", Style::Dim),
                 Line::new("", Style::Normal),
             ];
             for (name, on) in app.caps.summary() {

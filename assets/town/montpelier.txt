@@ -6,10 +6,10 @@
 # simplified: fix anything that is wrong here, the game reads it at start.
 # The format is described in README.md next to this file.
 #
-# Shops, restaurants and hotels have made-up names, kept well away from the
-# real ones and never at anybody's expense. Public places (the State House,
-# the library, the fire station, City Hall, the churches, the post office,
-# the college) are themselves.
+# Shops, restaurants, hotels and churches have made-up names, kept well away
+# from the real ones and never at anybody's expense. Public places (the State
+# House, the library, the fire station, City Hall, the post office, the
+# college) are themselves.
 
 town "Montpelier" 260 196
 seed 1791
@@ -55,7 +55,7 @@ area woods "Hubbard Park" : 0,0 116,0 116,56 111,71 80,76 60,82 40,86 20,90 0,92
 area lawn "the State House lawn" : 22,112.2 60,112.2 60,126.6 22,126.6
 area lawn "the State House grounds" : 22,94 60,94 60,98 22,98
 area green "the college green" : 200,90 256,90 256,118 236,120 224,119 200,118
-area parking "the parking lot behind Christ Church" : 103,144 113,144 113,154 103,154
+area parking "the parking lot behind the Church of the Third Casserole" : 103,144 113,144 113,154 103,154
 area parking "the Big Basket parking lot" : 122.6,169 131.6,169 131.6,169.6 122.6,169.6
 area plaza "City Hall plaza" : 131.6,142.6 131.6,144.6 122.6,144.6 122.6,142.6
 
@@ -72,7 +72,7 @@ building office "the Department of Fiddleheads and Maple" 72 150 14 8 door=W
 area parking "a state parking lot" : 50,159 86,159 86,166 50,166
 area parking "a state parking lot" : 4,148 30,148 30,162 4,162
 building postoffice "the Post Office" 78 134 10 8 door=N say="Neither rain nor sleet nor ghost. Here, first class candy."
-building church "Christ Church" 103.5 134 7 9 door=N say="Bless you, little ghost."
+building church "the Church of the Third Casserole" 103.5 134 7 9 door=N say="Bless you, little ghost. Have you eaten? Take a candy. Take one for later."
 building restaurant "Noodle Bend Trattoria" 103 156 9 6.5 door=W say="A ghost! Breadstick? No? A mint, then. Buona notte!"
 
 # ---------------------------------------------- Main Street, west side --
@@ -87,16 +87,16 @@ building restaurant "Biscuit Hollow Kitchen" 123 155 8.6 5 door=E say="Biscuit? 
 building grocery "the Big Basket Market" 122.6 161.5 9 7.2 door=E say="Aisle seven: candy. Take some, we overordered."
 
 # ---------------------------------------------- Main Street, east side --
-building church "the Unitarian Church" 138.4 83 8.5 9.5 door=W say="Welcome, all spirits."
+building church "the First Church of the Folding Chair" 138.4 83 8.5 9.5 door=W say="Welcome, all spirits. Grab a chair, we have four hundred."
 building shop "Muddy Boots Outfitters" 138.4 99 7 3.3 door=W say="Mud season's coming, ghost. Candy's by the register."
-building church "Bethany Church" 138.4 102.5 9 10.5 door=W say="Happy Halloween! Mind the step."
+building church "the Chapel of the Lost Mitten" 138.4 102.5 9 10.5 door=W say="Happy Halloween! Mind the step. Is this your mitten? Is this one?"
 building restaurant "Crêpe Expectations" 138.4 114.5 8 6 door=W say="Crêpe? Candy? Crêpe-candy?"
 building restaurant "the Short Stack Diner" 138.4 121.5 8 5 door=W say="Booth for one ghost? Here, have a candy."
 building theater "the Lantern Light Cinema" 138.4 133.4 8 7.6 door=W say="Tonight: Night of the Living Bread. Free popcorn ball." gives=popcorn
 building restaurant "the Covered Bridge Tavern" 138.4 147 7 6 door=W say="A ghost at the tavern! Pretzel? Candy, then."
 building shop "Nuts & Bolts Hardware" 138.4 159 9 5.5 door=W say="Need duct tape for that costume? Take a roll." gives=tape
 building coop "the Turnip Truck Co-op" 150 159.2 16 5.2 door=S say="Ethically sourced carob drops. They're... candy-adjacent." gives=carob
-building church "St. Augustine Church" 172 160 9 5 door=N say="Bless your little sheet."
+building church "the Church of the Perpetual Bake Sale" 172 160 9 5 door=N say="Bless your little sheet. The lemon bars are for the roof fund, but the candy's free."
 
 # ------------------------------------------------------------ the college --
 building college "College Hall" 220 80 18 10 door=S say="Vermont College of Fine Arts welcomes all ghosts. Is this a performance piece?"
