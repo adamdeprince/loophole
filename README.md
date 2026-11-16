@@ -300,6 +300,6 @@ something is in the wrong place, it is a line in `assets/town/montpelier.txt`.
 ## License
 
 Copyright 2026 Adam DePrince. Licensed under the
-[Apache License, Version 2.0](LICENSE); see [NOTICE](NOTICE). The Lilita One
+[GNU General Public License, version 3 only](LICENSE); see [NOTICE](NOTICE). The Lilita One
 typeface in `assets/fonts/` is under the SIL Open Font License 1.1
 ([OFL.txt](assets/fonts/OFL.txt)).
